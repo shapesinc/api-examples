@@ -48,4 +48,5 @@ We are adding integrations with more platforms all the time. If you don't see yo
 | Shape Voice | shape-voice | Complete | Shapes Inc |
 | Slack Bot | shape-slack | Complete | Shapes Inc |
 | Bluesky Bot | shape-bluesky | Complete | Shapes, Inc. |
+| Threads Bot | shape-threads | Complete | Shapes, Inc. |
 

@@ -1,0 +1,36 @@
+{
+    "name": "@shapesinc/shape-threads-bot",
+    "version": "0.1.0",
+    "description": "Shape Threads Bot - an example of using the Shapes API with a Threads (Instagram) bot.",
+    "copyright": "Copyright © 2025 Shapes.Inc",
+    "author": {
+        "name": "Shapes Inc.",
+        "email": "hi@shapes.inc",
+        "url": "https://shapes.inc"
+    },
+    "keywords": [
+        "threads",
+        "instagram",
+        "bot",
+        "shapes",
+        "api",
+        "chat",
+        "example"
+    ],
+    "license": "MIT",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shapesinc/api-examples.git"
+    },
+    "type": "module",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.5.0",
+        "openai": "^4.97.0",
+        "instagram-graph-api": "^5.0.1",
+        "node-fetch": "^3.3.2"
+    }
+} 
