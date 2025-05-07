@@ -1,200 +1,140 @@
-Build AI friends and coworkers in Slack
+# Build AI Friends and Coworkers in Slack
 
-How I created an AI friend for my slack workspace using shapes.inc
+This guide explains how to create an AI friend for your Slack workspace using shapes.inc.
 
-We will be creating a slack app that will be able to read messages in a channel and reply to them in the ui.
+## Overview
 
-Here's how we will implement this:
+We will create a Slack app that can read messages in a channel and reply to them in the UI.
+
+Implementation approach:
 
 1. Create a Slack app that can listen to messages in channels
 2. Set up event subscriptions to capture messages
-3. Process these messages through your API, which is hooked up the the Shapes API
+3. Process these messages through your API, which connects to the Shapes API
 4. Use the Slack API to post responses back to the channel
-   Let me walk you through the implementation approach:
 
-Setting Up Your Slack App
+## Setting Up Your Slack App
+
 You'll need to create a Slack app with the right permissions to:
 
-1. Read messages in channels (without being mentioned)
-2. Post messages back to channels
-   Here's how to build this:
+- Read messages in channels (without being mentioned)
+- Post messages back to channels
 
-Step 1: Create a Slack App
-First, you'll need to create a Slack App with the proper permissions:
+### Step 1: Create a Slack App
 
 1. Go to https://api.slack.com/apps and click "Create New App" > "From scratch"
 2. Enter a name for your app and select your workspace
 3. Once created, you'll need to set up permissions and event subscriptions
+4. Add a profile picture for your app under "Display Information"
 
-Add a pfp for your app under "Display Information"
+### Step 2: Get Your Tokens
 
-Get your tokens
+#### SLACK_BOT_TOKEN
 
-SLACK_BOT_TOKEN
+1. Go to the Slack API Dashboard and sign in with your Slack account
+2. Select your Slack app from the list
+3. In the left sidebar, click on "OAuth & Permissions"
+4. Look in the "Bot User OAuth Token" section at the top of the page
+5. The token will start with xoxb-
 
-Go to the Slack API Dashboard and sign in with your Slack account
-Select your Slack app from the list (or create a new one if you haven't already)
-In the left sidebar, click on "OAuth & Permissions"
-Look in the "Bot User OAuth Token" section at the top of the page
-The token will start with xoxb-
+This token is what your app will use to authenticate with Slack's API.
 
-This token is what your app will use to authenticate with Slack's API. It provides the permissions you've configured for your bot, such as reading messages and posting responses.
+#### SLACK_SIGNING_SECRET
 
-SLACK_SIGNING_SECRET
+1. In the "Basic Information" section of your Slack app settings
+2. Under "App Credentials"
+3. It's listed as "Signing Secret"
 
-In the "Basic Information" section of your Slack app settings
-Under "App Credentials"
-It's listed as "Signing Secret"
+Keep these credentials secure and never commit them to public repositories.
 
-Make sure to keep these credentials secure and never commit them to public repositories. It's best practice to use environment variables as you're doing with Heroku's config settings.
+### Step 3: Configure Bot Permissions
 
-Step 2: Configure Bot Permissions
 Under the "OAuth & Permissions" section, add these bot token scopes:
 
 - channels:history - To read messages in channels
 - chat:write - To send messages as your bot
 
-Step 3: Set Up Event Subscriptions (only do this when app is deployed - see deployment section)
+### Step 4: Set Up Event Subscriptions
+
 This is the critical part for detecting messages without being mentioned:
 
 1. Go to "Event Subscriptions" in your app's settings and enable events
 2. Add the Request URL where your server will receive events (e.g., https://your-api.example.com/slack/events)
-3. Under "Subscribe to bot events," add the message.channels event type
-   - This lets your bot receive all messages from public channels it's in without requiring mentions Slack API
+3. Under "Subscribe to bot events," add the `message.channels` event type
+   - This lets your bot receive all messages from public channels it's in without requiring mentions
 
-Step 4: Install App to Workspace
+### Step 5: Install App to Workspace
+
 After configuring permissions, install your app to your workspace. You'll receive a Bot User OAuth Token that you'll need for your application.
 
-Step 5: Create Your Backend API
-Now you'll need to create a server to process messages and send replies.
+## Creating Your Backend API
 
-You can use the main.py file as a starting point. All you need to do is create a simple server that will pickup slack events, you use the shapes client to process the message and then send the response back to slack using the slack bolt framework.
+Create a server to process messages and send replies. You can use the main.py file as a starting point.
 
-How it works:
+All you need to do is create a simple server that will pick up Slack events. Use the shapes client to process the message and then send the response back to Slack using the Slack bolt framework.
 
-User sends a message in a Slack channel where your bot is a member
-Slack sends this event to your server at /slack/events
-app receives this event
-It processes the message using the integrated Shapes API client
-It sends the response back to the Slack channel
+### How it works:
 
-Run it locally:
+1. User sends a message in a Slack channel where your bot is a member
+2. Slack sends this event to your server at /slack/events
+3. Your app receives this event
+4. It processes the message using the integrated Shapes API client
+5. It sends the response back to the Slack channel
+
+### Running Locally:
 
 ```
 pip install -r requirements.txt
 python main.py
 ```
 
-Deploy it to heroku:
+## Shapes API Configuration
 
-0. Install tar
+To get your shapes environment variables:
 
-```
-brew install gnu-tar
-```
+### SHAPESINC_SHAPE_USERNAME
 
-1. Install the Heroku CLI
-   If you haven't already, install the Heroku CLI following the instructions on the Heroku Dev Center.
+It's your shape vanity username. You can find it when you go to your shape profile page on shapes.inc. Get the part after /shapes.inc/ in the URL.
 
-Login to Heroku
+### SHAPESINC_API_KEY
 
-```
-heroku login
-```
+It's your shapes API key. You can find it when you go to your shape profile page on shapes.inc.
 
-# Install the builds plugin
+## Shapes Header Parameters
 
-This is needed to deploy the app to heroku without using git.
-
-```
-heroku plugins:install heroku-builds
-```
-
-# Create the app
-
-After you have verified your [account on heroku](https://devcenter.heroku.com/articles/account-verification), create the app. I called mine slack-basic.
-
-Set Environment Variables
-
-```
-heroku config:set SLACK_BOT_TOKEN=xoxb-your-bot-token --app slack-basic
-heroku config:set SLACK_SIGNING_SECRET=your-signing-secret --app slack-basic
-heroku config:set SHAPESINC_API_KEY=your-shapes-api-key --app slack-basic
-heroku config:set SHAPESINC_SHAPE_USERNAME=your-shapes-username --app slack-basic
-```
-
-To get your shapes env variables:
-
-SHAPESINC_SHAPE_USERNAME
-It's your shape vanity username. You can find it when you go to your shape profile page on shapes.inc. Get the part after /shapes.inc/ in the url.
-
-SHAPESINC_API_KEY
-It's your shapes api key. You can find it when you go to your shape profile page on shapes.inc.
-
-# Deploy from current directory
-
-```
-heroku builds:create --app slack-basic --tar=node
-```
-
-You should see your app live from a url that looks like this
-
-https://slack-basic-385173ecf3f7.herokuapp.com/
-
-# Verify your app for slack
-
-Now that your app is live (on Heroku or platform of choice), you can verify it for slack.
-
-1. Go to the Slack API Dashboard and sign in with your Slack account
-2. Select your Slack app from the list (or create a new one if you haven't already)
-3. In the left sidebar, click on "Event Subscriptions"
-4. Under "Enable Events", enter the url of your app with the /slack/events endpoint
-
-This is mine:
-
-```
-https://slack-basic-385173ecf3f7.herokuapp.com/slack/events
-```
-
-5. Under "Subscribe to bot events", add the message.channels event type
-
-```
-message.channels
-```
-
-6. Click "Save Changes"
-
-Now unleash your Shape!
-
-Step 1: Invite Your Bot to a Channel
-
-In your Slack workspace, create a test channel or use an existing one
-Invite your bot by typing /invite @your-bot-name in the channel
-
-Step 3: Send a Test Message
-
-Send a simple message in the channel where your bot was invited
-Your message should be picked up by your bot even without mentioning it directly
-
-Step 4: Check the Logs
-
-Monitor your Heroku logs to see if your bot is receiving the events:
-heroku logs --tail --app slack-basic-385173ecf3f7
-
-Look for log entries showing the received message event
-
-# Shapes header parameter meaning
-
-The shapes client is a python client that is used to send messages to the shapes api. We have two header params that we need to pass in the request so your Shape can know who is speaking to it and where the conversation is happening. Thus if you are talking to your shape in one slack chanel, and then message to it in a second slack channel, it will reply to both channels seperately, with knowlege context sandboxed in the channel level.
+The shapes client is a Python client used to send messages to the shapes API. We have two header params that we need to pass in the request so your Shape can know who is speaking to it and where the conversation is happening.
 
 ```
 X-User-Id: user_id
 ```
 
-This is the user id of the user who sent the message. This allows the shape to know who is speaking to it.
+This is the user ID of the user who sent the message. This allows the shape to know who is speaking to it.
 
 ```
 X-Channel-Id: channel_id
 ```
 
-This is the channel id of the channel where the message was sent. This allows the shape to know where to send the response.
+This is the channel ID of the channel where the message was sent. This allows the shape to know where to send the response.
+
+## Using Docker
+
+```
+docker build -t shape-slack .
+docker run -p 3000:3000 shape-slack
+```
+
+## Unleashing Your Shape
+
+### Step 1: Invite Your Bot to a Channel
+
+- In your Slack workspace, create a test channel or use an existing one
+- Invite your bot by typing `/invite @your-bot-name` in the channel
+
+### Step 2: Send a Test Message
+
+- Send a simple message in the channel where your bot was invited
+- Your message should be picked up by your bot even without mentioning it directly
+
+### Step 3: Check the Logs
+
+You can view the logs by going to URL and adding /logs to the end of the URL. You will be prompted to enter a secret. The secret is stored in the environment variable LOGS_SECRET.
