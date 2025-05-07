@@ -1,7 +1,6 @@
 
 
 a minimalist chess bot powered by the shapesinc api. plays legal moves, talks trash (optional), and never rage quits (hopefully).
-
 ## features
 
 - ai-powered chess move generation using shapesinc api
@@ -10,7 +9,7 @@ a minimalist chess bot powered by the shapesinc api. plays legal moves, talks tr
 
 ## demo
 
-coming soon or never
+https://shapeschess.vercel.app/
 
 ## setup
 
