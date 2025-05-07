@@ -67,36 +67,85 @@ const revoltAPI = {
         headers: {
           'x-bot-token': REVOLT_TOKEN,
           'Content-Type': 'application/json',
-          'Content-Length': data.length
+          'Content-Length': Buffer.byteLength(data)
         }
       };
-
+  
       const req = https.request(options, (res) => {
         let responseData = '';
         res.on('data', (chunk) => {
           responseData += chunk;
         });
         res.on('end', () => {
-          resolve({ data: JSON.parse(responseData) });
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve({ data: JSON.parse(responseData) });
+            } catch (error) {
+              reject(new Error(`Failed to parse response: ${responseData}`));
+            }
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ${responseData}`));
+          }
         });
       });
-
+  
       req.on('error', (error) => {
         reject(error);
       });
-
+  
       req.write(data);
       req.end();
     });
-  }
+  }  
 };
 
 // Helper function to send a message to a channel
 async function sendMessage(channelId, content) {
   try {
-    const response = await revoltAPI.post(`/channels/${channelId}/messages`, { content });
-    console.log('Message sent successfully');
-    return response.data;
+    const MAX_LENGTH = 1900; // Revolt's message length limit with buffer
+    if (content.length <= MAX_LENGTH) {
+      // Send short messages directly
+      const response = await revoltAPI.post(`/channels/${channelId}/messages`, {
+        content: content
+      });
+      console.log('Message sent successfully');
+      return response.data;
+    } else {
+      // Split long messages into chunks
+      const chunks = [];
+      let currentChunk = '';
+      const paragraphs = content.split('\n\n'); // Split by paragraphs
+
+      for (const paragraph of paragraphs) {
+        if (currentChunk.length + paragraph.length + 2 <= MAX_LENGTH) {
+          // Add paragraph to current chunk
+          currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+        } else {
+          // Save current chunk and start a new one
+          if (currentChunk) chunks.push(currentChunk);
+          currentChunk = paragraph;
+          // Handle oversized paragraphs
+          while (currentChunk.length > MAX_LENGTH) {
+            let splitPoint = currentChunk.lastIndexOf(' ', MAX_LENGTH);
+            if (splitPoint === -1) splitPoint = MAX_LENGTH;
+            chunks.push(currentChunk.slice(0, splitPoint));
+            currentChunk = currentChunk.slice(splitPoint).trim();
+          }
+        }
+      }
+      // Add the final chunk
+      if (currentChunk) chunks.push(currentChunk);
+
+      // Send each chunk as a separate message
+      for (const chunk of chunks) {
+        const response = await revoltAPI.post(`/channels/${channelId}/messages`, {
+          content: chunk
+        });
+        console.log('Chunk sent successfully:', chunk.slice(0, 50) + '...');
+      }
+      console.log('All chunks sent successfully');
+      return { message: 'All chunks sent' };
+    }
   } catch (error) {
     console.error('Error sending message:', error.message);
     if (error.response) {
@@ -224,4 +273,4 @@ async function startBot() {
 
 // Start the bot
 console.log('Starting bot...');
-startBot(); 
+startBot();
