@@ -1,0 +1,609 @@
+.chess-game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1c2526 0%, #2a3d45 100%);
+  color: #f8f1e9;
+  font-family: 'Inter', Arial, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.chess-game-container h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin: 0 0 25px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  color: #d4a017;
+  width: 100%;
+}
+
+.difficulty {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  background: rgba(248, 241, 233, 0.1);
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+
+.difficulty label {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-right: 12px;
+  color: #f8f1e9;
+}
+
+.difficulty select {
+  padding: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  background: #f8f1e9;
+  color: #1c2526;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.difficulty select:hover,
+.difficulty select:focus {
+  background: #e0d9d0;
+  transform: scale(1.02);
+  outline: none;
+}
+
+.chessboard {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.status {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 20px 0;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: #f8f1e9;
+  width: 100%;
+}
+
+.status.error {
+  color: #e63946;
+  font-weight: 700;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 25px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.controls button {
+  padding: 12px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: #d4a017;
+  color: #1c2526;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.controls button:hover {
+  background: #b88b14;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+}
+
+.controls button:focus {
+  outline: 3px solid #f8f1e9;
+  outline-offset: 2px;
+}
+
+.controls button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.move-history {
+  max-width: 400px;
+  width: 100%;
+  background: rgba(248, 241, 233, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.move-history h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #f8f1e9;
+}
+
+.move-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.move-history li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(248, 241, 233, 0.2);
+  color: #f8f1e9;
+  font-size: 1rem;
+}
+
+.move-history li:last-child {
+  border-bottom: none;
+}
+
+.promotion-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.promotion-content {
+  background: #f8f1e9;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  max-width: 90%;
+  width: 320px;
+}
+
+.promotion-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: #1c2526;
+}
+
+.promotion-content button {
+  margin: 8px;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  background: #1c2526;
+  color: #f8f1e9;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.promotion-content button:hover {
+  background: #2a3d45;
+  transform: scale(1.05);
+}
+
+.promotion-content button:focus {
+  outline: 3px solid #d4a017;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .chess-game-container {
+    padding: 15px;
+  }
+
+  .chess-game-container h1 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .difficulty {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    max-width: 280px;
+  }
+
+  .difficulty label {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .difficulty select {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  .chessboard {
+    max-width: 280px;
+  }
+
+  .status {
+    font-size: 1.2rem;
+    margin: 15px 0;
+  }
+
+  .controls {
+    max-width: 280px;
+  }
+
+  .controls button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  .move-history {
+    padding: 15px;
+    max-width: 280px;
+  }
+
+  .move-history h2 {
+    font-size: 1.4rem;
+  }
+
+  .move-history li {
+    font-size: 0.9rem;
+  }
+
+  .promotion-content {
+    padding: 20px;
+    width: 280px;
+  }
+
+  .promotion-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .promotion-content button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+  .chess-game-container h1 {
+    font-size: 2.4rem;
+  }
+
+  .difficulty {
+    max-width: 360px;
+  }
+
+  .chessboard {
+    max-width: 360px;
+  }
+
+  .status {
+    font-size: 1.3rem;
+  }
+
+  .controls {
+    max-width: 360px;
+  }
+
+  .controls button {
+    padding: 11px 24px;
+    font-size: 1.05rem;
+  }
+
+  .move-history {
+    max-width: 360px;
+  }
+
+  .move-history h2 {
+    font-size: 1.5rem;
+  }
+
+  .promotion-content {
+    width: 300px;
+  }
+}
+@media (min-width: 1024px) {
+  .chess-game-container {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .chess-game-container h1 {
+    font-size: 3.2rem;
+  }
+
+  .difficulty {
+    max-width: 400px;
+  }
+
+  .chessboard {
+    max-width: 400px;
+  }
+
+  .controls {
+    max-width: 400px;
+  }
+
+  .move-history {
+    max-width: 400px;
+  }
+
+  .status {
+    font-size: 1.5rem;
+  }
+
+  .chessboard-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+
+/* Chat Section */
+.chat-section {
+  max-width: 400px;
+  width: 100%;
+  background: rgba(248, 241, 233, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-top: 25px;
+}
+
+.chat-section h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #f8f1e9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.chat-container {
+  height: 200px;
+  overflow-y: auto;
+  background: rgba(28, 37, 38, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(248, 241, 233, 0.2);
+  scrollbar-width: thin;
+  scrollbar-color: #d4a017 rgba(248, 241, 233, 0.1);
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: rgba(248, 241, 233, 0.1);
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #d4a017;
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #b88b14;
+}
+
+.chat-message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #f8f1e9;
+  word-wrap: break-word;
+}
+
+.chat-message.user {
+  background: rgba(212, 160, 23, 0.2);
+  text-align: right;
+  margin-left: 20%;
+  border: 1px solid rgba(212, 160, 23, 0.4);
+}
+
+.chat-message.bot {
+  background: rgba(42, 61, 69, 0.3);
+  text-align: left;
+  margin-right: 20%;
+  border: 1px solid rgba(42, 61, 69, 0.5);
+}
+
+.chat-message strong {
+  font-weight: 600;
+  color: #d4a017;
+}
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  gap: 10px;
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #f8f1e9;
+  color: #1c2526;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.chat-input input:disabled {
+  background: #d0c9c0;
+  cursor: not-allowed;
+}
+
+.chat-input input:focus {
+  background: #e0d9d0;
+  outline: 3px solid #d4a017;
+  outline-offset: 2px;
+}
+
+.chat-input button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #d4a017;
+  color: #1c2526;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.chat-input button:hover {
+  background: #b88b14;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+}
+
+.chat-input button:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.chat-input button:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .chat-section {
+    max-width: 280px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+
+  .chat-section h2 {
+    font-size: 1.4rem;
+  }
+
+  .chat-container {
+    height: 150px;
+    padding: 10px;
+  }
+
+  .chat-message {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    margin: 6px 0;
+  }
+
+  .chat-message.user {
+    margin-left: 10%;
+  }
+
+  .chat-message.bot {
+    margin-right: 10%;
+  }
+
+  .chat-input {
+    gap: 8px;
+  }
+
+  .chat-input input {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .chat-input button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+  .chat-section {
+    max-width: 360px;
+    margin-top: 20px;
+  }
+
+  .chat-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .chat-container {
+    height: 180px;
+    padding: 12px;
+  }
+
+  .chat-message {
+    font-size: 0.95rem;
+  }
+
+  .chat-message.user {
+    margin-left: 15%;
+  }
+
+  .chat-message.bot {
+    margin-right: 15%;
+  }
+
+  .chat-input input {
+    padding: 9px 13px;
+    font-size: 0.95rem;
+  }
+
+  .chat-input button {
+    padding: 9px 18px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-section {
+    max-width: 400px;
+    margin-top: 25px;
+  }
+
+  .chat-container {
+    height: 200px;
+  }
+
+  .chat-message.user {
+    margin-left: 20%;
+  }
+
+  .chat-message.bot {
+    margin-right: 20%;
+  }
+  }
