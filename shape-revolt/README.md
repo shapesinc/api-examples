@@ -73,27 +73,17 @@ You can use any of your Shapes by changing the `SHAPESINC_SHAPE_USERNAME` in you
 
 
 
-## Sorayai's Updates
--Added picture guide for Revolt bot token + .env setup
--Updating index.js
+# Sorayai's Updates
+## -Added picture guide for Revolt bot token + .env setup
+
+## -Updating index.js
    1-Added code for debugging
    
    2-Added code to fix error: 
-   Revolt API Response: {
   status: 400,
-  data: '<!DOCTYPE html>\n' +
-    '<html lang="en">\n' +
-    '<head>\n' +
-    '    <meta charset="utf-8">\n' +
-    '    <meta name="color-scheme" content="light dark">\n' +
-    '    <title>400 Bad Request</title>\n' +
-    '</head>\n' +
-    '<body align="center">\n' +
-    '    <div role="main" align="center">\n' +
-    '        <h1>400: Bad Request</h1>\n' +
-    '        <p>The request could not be understood by the server due to malformed syntax.</p>\n' 
-
-  3-Added chunking code so Shapes on Revolt don't error out when sending long messages  
+  data: !DOCTYPE html
     
-    -Added chunking feature
+  3-Added chunking code so Shapes on Revolt don't error out when sending long messages 
+    
+ 
 
