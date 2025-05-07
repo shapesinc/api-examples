@@ -39,7 +39,9 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
    ```
 
    ## Picture Guide to Setup
+   
    [Revolt Bot Setup](https://postimg.cc/XZLQzvzy)
+   
    Link to Shapes Developer portal: [Shapes Dev Portal](https://shapes.inc/developer)
 
 ## Usage
