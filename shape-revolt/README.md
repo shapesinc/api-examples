@@ -12,7 +12,7 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
 ## Prerequisites
 
 - Node.js (18+) and npm
-- A Revolt bot token (create one from the [Revolt Developer Portal](https://developers.revolt.chat))
+- A Revolt bot token (create one from the Revolt app)
 - A Shapes API key
 - Your Shape username
 
@@ -37,6 +37,10 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
    SHAPESINC_API_KEY=your-shapes-api-key
    SHAPESINC_SHAPE_USERNAME=your-shape-username
    ```
+
+   ## Picture Guide to Setup
+   [Revolt Bot Setup](https://postimg.cc/XZLQzvzy)
+   Link to Shapes Developer portal: [Shapes Dev Portal](https://shapes.inc/developer)
 
 ## Usage
 
