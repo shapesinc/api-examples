@@ -1,0 +1,29 @@
+{
+  "name": "shapechess",
+  "version": "1.0.0",
+  "description": "ai chess.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^1.2.3",
+    "ai": "^3.4.13",
+    "chess.js": "^1.0.0-beta.6",
+    "next": "^14.2.3",
+    "react": "^18.2.0",
+    "react-chessboard": "^4.2.2",
+    "react-dom": "^18.2.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.3"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
+}
