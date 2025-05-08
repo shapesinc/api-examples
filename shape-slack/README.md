@@ -53,6 +53,11 @@ Under the "OAuth & Permissions" section, add these bot token scopes:
 
 - channels:history - To read messages in channels
 - chat:write - To send messages as your bot
+- app_mentions:read - To read messages in channels without being mentioned
+- canvases:read - To read messages in channels without being mentioned
+- emoji:read - To read messages in channels without being mentioned
+- links:write - To read messages in channels without being mentioned
+- links:read - To read messages in channels without being mentioned
 
 ### Step 4: Set Up Event Subscriptions
 
@@ -61,7 +66,9 @@ This is the critical part for detecting messages without being mentioned:
 1. Go to "Event Subscriptions" in your app's settings and enable events
 2. Add the Request URL where your server will receive events (e.g., https://your-api.example.com/slack/events)
 3. Under "Subscribe to bot events," add the `message.channels` event type
-   - This lets your bot receive all messages from public channels it's in without requiring mentions
+   - message.channels - This lets your bot receive all messages from public channels it's in without requiring mentions
+   - message.im - This lets your bot receive all messages from direct messages it's in without requiring mentions
+   - app_mention - Subscribe to only the message events that mention your app or bot
 
 ### Step 5: Install App to Workspace
 

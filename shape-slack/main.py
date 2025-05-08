@@ -92,7 +92,7 @@ def message_handler(message, say):
 
 
 # Endpoint for Slack events
-@flask_app.route("/slack/events", methods=["POST"])
+@flask_app.route("/", methods=["POST"])
 def slack_events():
     print(f"Received Slack event: {request.json}")
     # parse the challeneged parameter
@@ -108,7 +108,6 @@ def slack_events():
 # Health check endpoint
 @flask_app.route("/health", methods=["GET"])
 def health_check():
-    print("Health check endpoint called - OK")
     return jsonify({"status": "ok"})
 
 
