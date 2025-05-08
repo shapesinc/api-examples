@@ -6,7 +6,7 @@
 
 # Shapes.inc API Chat Example
 
-This repository demonstrates how to use the Shapes.inc API to send chat messages to a custom bot and receive responses. It is designed with security and ease of setup in mind.
+This php script demonstrates how to use the Shapes.inc API to send chat messages to a custom bot and receive responses. It is designed with security and ease of setup in mind.
 
 ## **What Does This Do?**
 
@@ -26,7 +26,7 @@ This repository demonstrates how to use the Shapes.inc API to send chat messages
 
 2. **Configure your environment**
 
-   - Copy `.env.example` to `.env` in the same directory as your script.
+   - Copy `.env.example` contents to `.env` in the same directory as your script(create new .env file if no).
    - Edit `.env` to set your Shapes.inc API key and default bot name:
 
      ```
@@ -38,7 +38,7 @@ This repository demonstrates how to use the Shapes.inc API to send chat messages
 
    - The script reads credentials from `.env`.
    - You can specify a different bot name via the `bot` parameter in the request.
-   - The `message` parameter is required and can be sent via GET or POST (POST is prioritized).
+   - The `message` parameter is required and can be sent via POST(GET is fallback).
 
 ## **Security Features**
 
@@ -51,23 +51,8 @@ This repository demonstrates how to use the Shapes.inc API to send chat messages
 
 Send a message to your bot:
 
+- **POST:** Send `message=Hello` (optionally add `?bot=yourbotname` to URL to change bot username) to '/yourscript.php'.
 - **GET:** `/yourscript.php?message=Hello&bot=yourbotname`
-- **POST:** Send `message=Hello` and optionally `bot=yourbotname` as form data.
 
-## **.env.example**
-
-See `.env.example` for the expected environment variables.
-
----
-
-## **.env.example**
-
-SHAPESINC_API_KEY=your_api_key_here
-SHAPESINC_SHAPE_USERNAME=your_default_botname_here
-
-
----
-
-**Replace the placeholders with your actual API key and bot name.**
 
 ---
