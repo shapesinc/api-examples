@@ -2,8 +2,6 @@
 
 ---
 
-## **.env.example**
-
 # Shapes.inc API Chat Example
 
 This php script demonstrates how to use the Shapes.inc API to send chat messages to a custom bot and receive responses. It is designed with security and ease of setup in mind.
@@ -51,7 +49,7 @@ This php script demonstrates how to use the Shapes.inc API to send chat messages
 
 Send a message to your bot:
 
-- **POST:** Send `message=Hello` (optionally add `?bot=yourbotname` to URL to change bot username) to '/yourscript.php'.
+- **POST:** Send `message=Hello` (optionally add `?bot=yourbotname` to URL to change bot username) to `/yourscript.php`.
 - **GET:** `/yourscript.php?message=Hello&bot=yourbotname`
 
 
