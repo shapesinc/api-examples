@@ -16,12 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && apt-get clean
 
-RUN curl --version
-
 # Install Doppler using the install script
 RUN curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh
 
-RUN doppler --version
 
 # Copy project files
 COPY . /app/

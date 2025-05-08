@@ -121,6 +121,8 @@ This is the channel ID of the channel where the message was sent. This allows th
 ```
 docker build -t shape-slack .
 docker run -p 3000:3000 shape-slack
+docker run -d -p 3000:3000 --name my-container shape-slack
+docker exec -it my-container /bin/bash
 ```
 
 ## Unleashing Your Shape
