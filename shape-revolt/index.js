@@ -23,6 +23,9 @@ const shapes = new OpenAI({
 let botId = null;
 let botUsername = null;
 
+// WebSocket connection
+let socket = null;
+
 // Create event emitter for custom events
 const events = new EventEmitter();
 
@@ -45,7 +48,25 @@ const revoltAPI = {
           data += chunk;
         });
         res.on('end', () => {
-          resolve({ data: JSON.parse(data) });
+          try {
+            // Check for error status codes
+            if (res.statusCode >= 400) {
+              reject(new Error(`HTTP Error: ${res.statusCode} ${res.statusMessage}. Response: ${data}`));
+              return;
+            }
+            
+            if (data.trim().startsWith('error code:')) {
+              reject(new Error(`HTTP Error: ${data.trim()}`));
+              return;
+            }
+            
+            const parsedData = JSON.parse(data);
+            resolve({ data: parsedData });
+          } catch (e) {
+            console.error('Error parsing JSON response:', e.message);
+            console.error('Raw response:', data);
+            reject(new Error(`Failed to parse response: ${e.message}`));
+          }
         });
       });
 
@@ -67,85 +88,106 @@ const revoltAPI = {
         headers: {
           'x-bot-token': REVOLT_TOKEN,
           'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(data)
+          'Content-Length': data.length
         }
       };
-  
+
       const req = https.request(options, (res) => {
         let responseData = '';
         res.on('data', (chunk) => {
           responseData += chunk;
         });
         res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              resolve({ data: JSON.parse(responseData) });
-            } catch (error) {
-              reject(new Error(`Failed to parse response: ${responseData}`));
+          try {
+            // Check for error status codes
+            if (res.statusCode >= 400) {
+              reject(new Error(`HTTP Error: ${res.statusCode} ${res.statusMessage}. Response: ${responseData}`));
+              return;
             }
-          } else {
-            reject(new Error(`HTTP ${res.statusCode}: ${responseData}`));
+            
+            if (responseData.trim().startsWith('error code:')) {
+              reject(new Error(`HTTP Error: ${responseData.trim()}`));
+              return;
+            }
+            
+            const parsedData = JSON.parse(responseData);
+            resolve({ data: parsedData });
+          } catch (e) {
+            console.error('Error parsing JSON response:', e.message);
+            console.error('Raw response:', responseData);
+            reject(new Error(`Failed to parse response: ${e.message}`));
           }
         });
       });
-  
+
       req.on('error', (error) => {
         reject(error);
       });
-  
+
       req.write(data);
       req.end();
     });
-  }  
+  }
 };
 
-// Helper function to send a message to a channel
-async function sendMessage(channelId, content) {
+// Helper function to start typing indication
+async function startTyping(channelId) {
   try {
-    const MAX_LENGTH = 1900; // Revolt's message length limit with buffer
-    if (content.length <= MAX_LENGTH) {
-      // Send short messages directly
-      const response = await revoltAPI.post(`/channels/${channelId}/messages`, {
-        content: content
-      });
-      console.log('Message sent successfully');
-      return response.data;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // Send BeginTyping websocket event
+      socket.send(JSON.stringify({
+        type: 'BeginTyping',
+        channel: channelId
+      }));
+      console.log('Started typing indicator');
     } else {
-      // Split long messages into chunks
-      const chunks = [];
-      let currentChunk = '';
-      const paragraphs = content.split('\n\n'); // Split by paragraphs
-
-      for (const paragraph of paragraphs) {
-        if (currentChunk.length + paragraph.length + 2 <= MAX_LENGTH) {
-          // Add paragraph to current chunk
-          currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
-        } else {
-          // Save current chunk and start a new one
-          if (currentChunk) chunks.push(currentChunk);
-          currentChunk = paragraph;
-          // Handle oversized paragraphs
-          while (currentChunk.length > MAX_LENGTH) {
-            let splitPoint = currentChunk.lastIndexOf(' ', MAX_LENGTH);
-            if (splitPoint === -1) splitPoint = MAX_LENGTH;
-            chunks.push(currentChunk.slice(0, splitPoint));
-            currentChunk = currentChunk.slice(splitPoint).trim();
-          }
-        }
-      }
-      // Add the final chunk
-      if (currentChunk) chunks.push(currentChunk);
-
-      // Send each chunk as a separate message
-      for (const chunk of chunks) {
-        const response = await revoltAPI.post(`/channels/${channelId}/messages`, {
-          content: chunk
-        });
-        console.log('Chunk sent successfully:', chunk.slice(0, 50) + '...');
-      }
-      console.log('All chunks sent successfully');
-      return { message: 'All chunks sent' };
+      console.warn('Cannot start typing: socket not ready');
     }
+  } catch (error) {
+    console.error('Error starting typing indicator:', error.message);
+  }
+}
+
+// Helper function to stop typing indication
+async function stopTyping(channelId) {
+  try {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // Send EndTyping websocket event
+      socket.send(JSON.stringify({
+        type: 'EndTyping',
+        channel: channelId
+      }));
+      console.log('Stopped typing indicator');
+    } else {
+      console.warn('Cannot stop typing: socket not ready');
+    }
+  } catch (error) {
+    console.error('Error stopping typing indicator:', error.message);
+  }
+}
+
+// Helper function to send a message to a channel
+async function sendMessage(channelId, content, replyToId = null) {
+  try {
+    // Stop typing before sending message
+    await stopTyping(channelId);
+    
+    // Prepare the message data
+    const messageData = { content };
+    
+    // Add the reply information if we're replying to a message
+    if (replyToId) {
+      messageData.replies = [
+        {
+          id: replyToId,
+          mention: false // Don't ping the user with the reply
+        }
+      ];
+    }
+    
+    const response = await revoltAPI.post(`/channels/${channelId}/messages`, messageData);
+    console.log('Message sent successfully');
+    return response.data;
   } catch (error) {
     console.error('Error sending message:', error.message);
     if (error.response) {
@@ -156,33 +198,65 @@ async function sendMessage(channelId, content) {
 
 // Main bot function
 async function startBot() {
-  try {
+  try {   
     // Get bot info first
-    const { data: self } = await revoltAPI.get('/users/@me');
+    let self;
+    try {
+      const response = await revoltAPI.get('/users/@me');
+      self = response.data;
+    } catch (error) {
+      console.error('Error getting bot info:', error.message);
+      console.log('Retrying in 10 seconds...');
+      setTimeout(startBot, 10000);
+      return;
+    }
     
     botId = self._id;
     botUsername = self.username;
     console.log(`Logged in as ${botUsername} (${botId})`);
     
     // Connect using the WebSocket URL for bots
-    const socket = new WebSocket('wss://ws.revolt.chat');
+    try {
+      socket = new WebSocket('wss://ws.revolt.chat');
+    } catch (error) {
+      console.error('Error connecting to WebSocket:', error.message);
+      console.log('Retrying in 5 seconds...');
+      setTimeout(startBot, 5000);
+      return;
+    }
     
     socket.on('open', () => {
       console.log('Connected to Revolt WebSocket');
-      // Authenticate with bot token
-      socket.send(JSON.stringify({
-        type: 'Authenticate',
-        token: REVOLT_TOKEN
-      }));
+      try {
+        // Authenticate with bot token
+        socket.send(JSON.stringify({
+          type: 'Authenticate',
+          token: REVOLT_TOKEN
+        }));
+      } catch (error) {
+        console.error('Error during authentication:', error.message);
+        socket.close();
+      }
     });
     
     socket.on('message', async (data) => {
       try {
-        const message = JSON.parse(data);
+        let message;
+        try {
+          message = JSON.parse(data);
+        } catch (e) {
+          console.error('Error parsing WebSocket message:', e.message);
+          console.error('Raw WebSocket data:', data);
+          return;
+        }
+        
         console.log('Received message:', message.type);
         
         if (message.type === 'Ready') {
           console.log('Bot is ready to receive messages');
+        } else if (message.type === 'Error') {
+          console.error('Revolt server error:', message.error);
+          return;
         }
         
         if (message.type === 'Message') {
@@ -201,12 +275,45 @@ async function startBot() {
             console.error('Error checking channel type:', err.message);
           }
           
-          // Check if bot is mentioned or if it's a DM
+          // Check if bot is mentioned, if it's a DM, or if it's a reply to the bot's message
           const isMentioned = message.content && message.content.includes(`<@${botId}>`);
           
-          if (isMentioned || isDM) {
-            console.log(isDM ? 'Message is in DM' : 'Bot was mentioned!');
+          // Check if this is a reply to the bot
+          let isReplyingToBot = false;
+          let repliedToContent = '';
+          
+          // Check different possible reply formats based on the logs
+          const replyIds = message.replyIds || 
+                          (message.replies && Array.isArray(message.replies) ? message.replies : []) || 
+                          (message.reply_to ? [message.reply_to] : []);
+          
+          if (replyIds && replyIds.length > 0) {
             try {
+              // For each reply ID, check if it's a message from the bot
+              for (const replyId of replyIds) {
+                const { data: repliedToMessage } = await revoltAPI.get(`/channels/${message.channel}/messages/${replyId}`);
+                console.log('Found replied to message:', repliedToMessage);
+                if (repliedToMessage.author === botId) {
+                  isReplyingToBot = true;
+                  repliedToContent = repliedToMessage.content;
+                  console.log('User is replying to bot message:', repliedToContent);
+                  break;
+                }
+              }
+            } catch (err) {
+              console.error('Error checking reply message:', err.message);
+            }
+          }
+          
+          if (isMentioned || isDM || isReplyingToBot) {
+            console.log(isDM ? 'Message is in DM' : isReplyingToBot ? 'Message is reply to bot' : 'Bot was mentioned!');
+            try {
+              // Start typing indicator
+              await startTyping(message.channel);
+              
+              // Save the original message ID to reply to
+              const originalMessageId = message._id;
+              
               // Remove the mention from the message if present
               let content = message.content;
               if (isMentioned) {
@@ -214,18 +321,25 @@ async function startBot() {
               }
               
               if (!content) {
-                await sendMessage(message.channel, "Hello! How can I help you today?");
+                await sendMessage(message.channel, "Hello! How can I help you today?", message._id);
                 return;
               }
               
-              console.log('Sending to Shapes API:', content);
+              // Build message history for context
+              const messages = isReplyingToBot 
+                ? [
+                    { role: "assistant", content: repliedToContent },
+                    { role: "user", content: content }
+                  ]
+                : [
+                    { role: "user", content: content }
+                  ];
               
               // Call the Shapes API using the OpenAI SDK
+              // Keep the typing indicator active while waiting for the API response
               const response = await shapes.chat.completions.create({
                 model: `shapesinc/${SHAPES_USERNAME}`,
-                messages: [
-                  { role: "user", content: content }
-                ],
+                messages: messages,
                 temperature: 0.7,
                 max_tokens: 1000
               });
@@ -234,15 +348,17 @@ async function startBot() {
               const aiResponse = response.choices[0].message.content;
               console.log('AI Response:', aiResponse);
               
-              // Send the response back to the user
-              await sendMessage(message.channel, aiResponse);
+              // Send the response back to the user as a reply to the original message
+              await sendMessage(message.channel, aiResponse, originalMessageId);
               
             } catch (error) {
+              await stopTyping(message.channel);
+              
               console.error('Error processing message:', error.message);
               if (error.response) {
                 console.error('API Response:', error.response.data);
               }
-              await sendMessage(message.channel, "Sorry, I encountered an error while processing your request.");
+              await sendMessage(message.channel, "Sorry, I encountered an error while processing your request.", message._id);
             }
           }
         }
@@ -271,6 +387,16 @@ async function startBot() {
   }
 }
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  console.log('Bot will continue running despite the error');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  console.log('Bot will continue running despite the error');
+});
+
 // Start the bot
 console.log('Starting bot...');
-startBot();
+startBot(); 
