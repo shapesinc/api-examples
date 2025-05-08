@@ -54,3 +54,21 @@ Send a message to your bot:
 
 
 ---
+
+## **Example Code**
+
+Send prompt to your Shapes API handler:
+
+- **POST:** '
+$ch = curl_init('https://yourdomain.com/yourscript.php?bot=' . urlencode($bot));
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, ['message' => $prompt]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response`
+- **GET:** `file_get_contebts("/yourscript.php?message=$prompt&bot=$botName")`
+
+---
