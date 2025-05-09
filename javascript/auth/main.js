@@ -33,10 +33,40 @@ async function main() {
     const baseAuthUrl = "https://api.shapes.inc/auth";
     const baseApiUrl = "https://api.shapes.inc/v1";
 
+    // If the user provided a message on the command line, use that one
+    const args = process.argv.slice(2);
+    const messages = [
+      { role: "user", content: args.length > 0 ? args.join(" ") : "Hello. Do you know my name?" }
+    ];
+
+    // Before authorization, the API calls require an API key
+    // The API key is used to authenticate the application
+
+    const shapes_client = new OpenAI({
+      apiKey: shape_api_key,
+      baseURL: baseApiUrl,
+    });
+
+    // Send the message to the Shapes API with the API key
+    // This will use the API key rate limits
+    const non_auth_resp = await shapes_client.chat.completions.create({
+      model: `shapesinc/${shape_username}`,
+      messages: messages,
+    });
+
+    console.log("Raw response (non-auth):", non_auth_resp);
+
+    if (non_auth_resp.choices && non_auth_resp.choices.length > 0) {
+      console.log("Reply (non-auth):", non_auth_resp.choices[0].message.content);
+    } else {
+      console.log("No choices in response (non-auth):", non_auth_resp);
+    }
 
     // STEP 1: App starts the authorize flow by directing the user to the authorize page
     // where the user will be asked to log in to their Shapes account and approve the authorization request
 
+
+    // Start the authorize flow
     console.log("Click on the link to authorize the application:")
     console.log(`${baseSiteUrl}/authorize?app_id=${shape_app_id}`)
 
@@ -45,45 +75,48 @@ async function main() {
     // The user will be asked to copy and paste the token here
     // (passing the token back to the app through a return URL is not implemented yet)
 
-    // Read from the user the nonce
+    // Read from the user the one time code
     console.log("\n")
-    console.log("After you login to Shapes Inc and approve the authorization request,\nyou will be given a one-time token.\nCopy and paste that token here.")
-    const nonce = await new Promise((resolve) => {
+    console.log("After you login to Shapes Inc and approve the authorization request,\nyou will be given a one-time code.\nCopy and paste that code here.")
+    const code = await new Promise((resolve) => {
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
       });
-      rl.question("Enter the token: ", (nonce) => {
+      rl.question("Enter the one-time code: ", (code) => {
         rl.close();
-        resolve(nonce);
+        resolve(code);
       });
     });
 
-    // STEP 3: The application exchanges the nonce for a long-lived user auth token
+    // STEP 3: The application exchanges the one-time code for a long-lived user auth token
     // This is the only time the application will have access to the user auth token
     // through the Shapes API, so it should store that token somewhere safe.
+    // To exchange the one-time code for a user auth token, the app needs to provide
+    // application id and the one-time code
+    // The API can get the application id from the API key, from the X-App-ID header
+    // or from app_id in the body
 
+    // Exchange the one-time code for a user auth token
     const response = await axios.post(`${baseAuthUrl}/nonce`, {
       app_id: shape_app_id,
-      nonce: nonce,
-    }, {
-      headers: {
-        Authorization: `Bearer ${shape_api_key}`,
-      },
+      code: code,
     });
     const shape_user_auth_token = response.data.auth_token;
 
     // WARNING: This is just for example purposes. DO NOT show the auth token
     // in a production application. Threat it as if it were a password.
-    console.log("User auth token:", shape_user_auth_token);
+    console.log("User auth token: ", shape_user_auth_token);
 
     // STEP 4: The application creates a client with the shape API key / base URL
     // and X-User-Auth header set to the user auth token it stored from the previous step
-    
-    const shapes_client = new OpenAI({
-      apiKey: shape_api_key,
+
+    // This call can be made without an API key if the X-App-ID and X-User-Auth headers are set
+    const auth_shapes_client = new OpenAI({
+      apiKey: "not-needed",
       baseURL: baseApiUrl,
-      headers: {
+      defaultHeaders: {
+        "X-App-ID": shape_app_id,
         "X-User-Auth": shape_user_auth_token,
       },
     });
@@ -93,14 +126,8 @@ async function main() {
     // be rate limited separately, and will allow the user to continue their conversation
     // with their favorite shapes from other places.
 
-    // If the user provided a message on the command line, use that one
-    const args = process.argv.slice(2);
-    const messages = [
-      { role: "user", content: args.length > 0 ? args.join(" ") : "Hello. Do you know my name?" }
-    ];
-
     // Send the message to the Shapes API. This will use the shapes-api model.
-    const resp = await shapes_client.chat.completions.create({
+    const resp = await auth_shapes_client.chat.completions.create({
       model: `shapesinc/${shape_username}`,
       messages: messages,
     });
