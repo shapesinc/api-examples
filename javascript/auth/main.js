@@ -28,30 +28,41 @@ async function main() {
       throw new Error("SHAPESINC_SHAPE_USERNAME not found in .env");
     }
 
-    // const baseSiteUrl = "https://shapes.inc";
-    const baseSiteUrl = "http://localhost:3000";
+    // The base URLs for the different parts of the flow
+    const baseSiteUrl = "https://shapes.inc";
+    const baseAuthUrl = "https://api.shapes.inc/auth";
+    const baseApiUrl = "https://api.shapes.inc/v1";
+
+
+    // STEP 1: App starts the authorize flow by directing the user to the authorize page
+    // where the user will be asked to log in to their Shapes account and approve the authorization request
 
     console.log("Click on the link to authorize the application:")
     console.log(`${baseSiteUrl}/authorize?app_id=${shape_app_id}`)
 
+    // STEP 2: User logs in to their Shapes account and approves the authorization request
+    // The user will be given a one-time token to present back to the app
+    // The user will be asked to copy and paste the token here
+    // (passing the token back to the app through a return URL is not implemented yet)
+
     // Read from the user the nonce
+    console.log("\n")
+    console.log("After you login to Shapes Inc and approve the authorization request,\nyou will be given a one-time token.\nCopy and paste that token here.")
     const nonce = await new Promise((resolve) => {
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
       });
-      rl.question("Enter the nonce: ", (nonce) => {
+      rl.question("Enter the token: ", (nonce) => {
         rl.close();
         resolve(nonce);
       });
     });
 
+    // STEP 3: The application exchanges the nonce for a long-lived user auth token
+    // This is the only time the application will have access to the user auth token
+    // through the Shapes API, so it should store that token somewhere safe.
 
-    // const baseAuthUrl = "https://api.shapes.inc/auth";
-    const baseAuthUrl = "http://localhost:8080/auth";
-
-    // Exchange nonce for user auth token
-    // Add the shape_api_key as Authorization header
     const response = await axios.post(`${baseAuthUrl}/nonce`, {
       app_id: shape_app_id,
       nonce: nonce,
@@ -61,17 +72,26 @@ async function main() {
       },
     });
     const shape_user_auth_token = response.data.auth_token;
+
+    // WARNING: This is just for example purposes. DO NOT show the auth token
+    // in a production application. Threat it as if it were a password.
     console.log("User auth token:", shape_user_auth_token);
 
-    // Create the client with the shape API key and the Shapes API base URL
-    // and X-User-Auth header set to the shape_user_auth_token
+    // STEP 4: The application creates a client with the shape API key / base URL
+    // and X-User-Auth header set to the user auth token it stored from the previous step
+    
     const shapes_client = new OpenAI({
       apiKey: shape_api_key,
-      baseURL: "https://api.shapes.inc/v1/",
+      baseURL: baseApiUrl,
       headers: {
         "X-User-Auth": shape_user_auth_token,
       },
     });
+
+    // STEP 5: The application can now use the client to make requests to the Shapes API
+    // on behalf of the user. These requests will be authenticated as the user and will
+    // be rate limited separately, and will allow the user to continue their conversation
+    // with their favorite shapes from other places.
 
     // If the user provided a message on the command line, use that one
     const args = process.argv.slice(2);
