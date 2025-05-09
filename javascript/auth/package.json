@@ -1,0 +1,30 @@
+{
+    "name": "@shapesinc/nodejs-auth",
+    "version": "1.0.0",
+    "description": "An example of using the Shapes API to authorize an application.",
+    "copyright": "Copyright © 2025 Shapes, Inc",
+    "author": {
+        "name": "Shapes Inc.",
+        "email": "hi@shapes.inc",
+        "url": "https://shapes.inc"
+    },
+    "keywords": [],
+    "license": "MIT",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shapesinc/api.git"
+    },
+    "type": "module",
+    "scripts": {
+        "start": "node main.js"
+    },
+    "dependencies": {
+        "axios": "^1.9.0",
+        "dotenv": "^16.5.0",
+        "openai": "^4.97.0"
+    },
+    "devDependencies": {
+        "npm-check-updates": "^18.0.1"
+    }
+}
