@@ -1,0 +1,24 @@
+# Use official PHP image with Apache
+FROM php:8.2-apache
+
+# Install necessary PHP extensions (curl, json, etc.)
+RUN docker-php-ext-install curl
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy your PHP script into the container
+COPY . /var/www/html/
+
+ENV SHAPESINC_API_KEY=your_default_key
+ENV SHAPESINC_SHAPE_USERNAME=your_default_username
+
+
+# Set recommended permissions (optional, for development)
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Apache in the foreground
+CMD ["apache2-foreground"]
