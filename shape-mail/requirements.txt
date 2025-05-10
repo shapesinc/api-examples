@@ -1,0 +1,6 @@
+flask
+sentry-sdk[flask]
+requests
+python-dotenv
+openai
+PyPDF2
