@@ -34,6 +34,22 @@ if (!empty($_POST['message'])) {
     $user_message = htmlspecialchars($_GET['message'], ENT_QUOTES, 'UTF-8');
 }
 
+// Get user ID from request parameters
+$user_id = null;
+if (!empty($_POST['user_id'])) {
+    $user_id = htmlspecialchars($_POST['user_id'], ENT_QUOTES, 'UTF-8');
+} elseif (!empty($_GET['user_id'])) {
+    $user_id = htmlspecialchars($_GET['user_id'], ENT_QUOTES, 'UTF-8');
+}
+
+// Get channel ID from request parameters
+$channel_id = null;
+if (!empty($_POST['channel_id'])) {
+    $channel_id = htmlspecialchars($_POST['channel_id'], ENT_QUOTES, 'UTF-8');
+} elseif (!empty($_GET['channel_id'])) {
+    $channel_id = htmlspecialchars($_GET['channel_id'], ENT_QUOTES, 'UTF-8');
+}
+
 // Prepare payload
 $payload = [
     "model" => "shapesinc/" . $username,
@@ -45,13 +61,31 @@ $payload = [
     ]
 ];
 
+// Prepare headers
+$headers = [
+    "Authorization: Bearer $apiKey",
+    "Content-Type: application/json"
+];
+
+// Add X-User-Id header if user ID is provided
+if ($user_id) {
+    $headers[] = "X-User-Id: $user_id";  // If not provided, all requests will be attributed to
+    // the user who owns the API key. This will cause unexpected behavior if you are using the same API
+    // key for multiple users. For production use cases, either provide this header or obtain a
+    // user-specific API key for each user.
+}
+
+// Add X-Channel-Id header if channel ID is provided
+if ($channel_id) {
+    $headers[] = "X-Channel-Id: $channel_id";  // If not provided, all requests will be attributed to
+    // the user. This will cause unexpected behavior if interacting with multiple users
+    // in a group.
+}
+
 // Init curl
 $ch = curl_init("https://api.shapes.inc/v1/chat/completions");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "Authorization: Bearer $apiKey",
-    "Content-Type: application/json"
-]);
+curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 curl_setopt($ch, CURLOPT_TIMEOUT, 30);

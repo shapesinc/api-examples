@@ -47,13 +47,17 @@ class ShapesClient:
     
     def generate_response(self, 
                          conversation_history: List[Dict[str, str]], 
-                         system_prompt: Optional[str] = None) -> str:
+                         system_prompt: Optional[str] = None,
+                         user_id: Optional[str] = None,
+                         channel_id: Optional[str] = None) -> str:
         """
         Generate a response from the Shapes Inc model.
         
         Args:
             conversation_history: List of dictionaries with 'role' and 'content' keys
             system_prompt: Optional custom system prompt (ignored)
+            user_id: Optional user ID for the request
+            channel_id: Optional channel ID for the request
             
         Returns:
             The generated response text
@@ -78,13 +82,28 @@ class ShapesClient:
         self.last_request_time = time.time()
         
         try:
+            # Set up headers for user identification and conversation context
+            headers = {}
+            if user_id:
+                headers["X-User-Id"] = user_id  # If not provided, all requests will be attributed to
+                # the user who owns the API key. This will cause unexpected behavior if you are using the same API
+                # key for multiple users. For production use cases, either provide this header or obtain a
+                # user-specific API key for each user.
+            
+            # Only add channel ID if provided
+            if channel_id:
+                headers["X-Channel-Id"] = channel_id  # If not provided, all requests will be attributed to
+                # the user. This will cause unexpected behavior if interacting with multiple users
+                # in a group.
+
             # Make the request using the OpenAI client
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=1024,
-                timeout=REQUEST_TIMEOUT
+                timeout=REQUEST_TIMEOUT,
+                extra_headers=headers,
             )
             
             # Extract the response content

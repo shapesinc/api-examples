@@ -14,6 +14,8 @@ async def run():
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Interact with Shapes API')
     parser.add_argument('message', nargs='*', help='Message to send to the shape')
+    parser.add_argument('--user-id', help='User ID for the request')
+    parser.add_argument('--channel-id', help='Channel ID for the request')
 
     args = parser.parse_args()
 
@@ -52,11 +54,26 @@ async def run():
             base_url="https://api.shapes.inc/v1/",
         )
 
+        # Set up headers for user identification and conversation context
+        headers = {}
+        if args.user_id:
+            headers["X-User-Id"] = args.user_id  # If not provided, all requests will be attributed to
+            # the user who owns the API key. This will cause unexpected behavior if you are using the same API
+            # key for multiple users. For production use cases, either provide this header or obtain a
+            # user-specific API key for each user.
+        
+        # Only add channel ID if provided
+        if args.channel_id:
+            headers["X-Channel-Id"] = args.channel_id  # If not provided, all requests will be attributed to
+            # the user. This will cause unexpected behavior if interacting with multiple users
+            # in a group.
+
         # Send the message to the shape. This will use the shape configured model.
         # WARNING: If the shape is premium, this will also consume credits.
         resp: ChatCompletion = await aclient_shape.chat.completions.create(
             model=f"shapesinc/{shape_username}",
             messages=messages,
+            extra_headers=headers,
         )
         print(f"Raw response: {resp}\n")
 

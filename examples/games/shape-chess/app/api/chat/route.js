@@ -13,7 +13,7 @@ if (!process.env.SHAPESINC_API_KEY || !shape_username) {
 
 export async function POST(request) {
   try {
-    const { message, fen, moves } = await request.json();
+    const { message, fen, moves, userId, channelId } = await request.json();
 
     if (!message) {
       return new Response(JSON.stringify({ error: "Message is required" }), {
@@ -36,10 +36,27 @@ export async function POST(request) {
       prompt += " No chess position provided, so focus on general chess talk or roast the user lightly.";
     }
 
+    // Set up headers for user identification and conversation context
+    const headers = {};
+    if (userId) {
+      headers["X-User-Id"] = userId;  // If not provided, all requests will be attributed to
+      // the user who owns the API key. This will cause unexpected behavior if you are using the same API
+      // key for multiple users. For production use cases, either provide this header or obtain a
+      // user-specific API key for each user.
+    }
+
+    // Only add channel ID if provided
+    if (channelId) {
+      headers["X-Channel-Id"] = channelId;  // If not provided, all requests will be attributed to
+      // the user. This will cause unexpected behavior if interacting with multiple users
+      // in a group.
+    }
+
     const resp = await shapes_client.chat.completions.create({
       model: `shapesinc/${shape_username}`,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 150,
+      extra_headers: headers,
     });
 
     const reply = resp.choices[0]?.message.content;
