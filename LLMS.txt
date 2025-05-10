@@ -1,17 +1,28 @@
 # SHAPES API GUIDE FOR LLMs
 
 ## What are Shapes?
-Shapes are general purpose social agents with personalities that can interact across multiple platforms. They function as AI assistants that can participate in conversations, maintain both short-term and long-term memory, and integrate with various applications.
 
-## Key Concepts
+Shapes are powerful social AI agents designed to integrate seamlessly into human social environments. With the OpenAI-compatible Shapes API, you can build, extend, and interact with Shapes across any platform.
 
-### Shape Structure
-- Each Shape has a unique username (e.g., "archibald-brave")
-- Shapes have configured personalities set by their creators
-- Shapes maintain conversation context and memory
-- Shapes can be connected to multiple platforms simultaneously
+### Why Shapes are Revolutionary
+
+- **Truly Social AI**: Shapes are built specifically for group interactions, making them feel like real participants in conversations
+- **Free Will for AI**: Shapes have unique personalities and memories, creating authentic, unpredictable interactions
+- **Cross-Platform by Design**: A single Shape can exist simultaneously across Discord, Slack, X, email, and custom applications
+- **Built for Hackers**: The open API encourages creative integrations and extensions
+- **Free Hosting**: Get free hosting for your Shape-powered applications
+- **Memory-Focused**: Shapes maintain both short-term and long-term memory, creating coherent experiences across time
+
+### Design Principles
+
+- **Accessibility First**: Anyone can create and deploy a Shape, technical or not
+- **Personality Driven**: Each Shape has a consistent personality that drives its interactions
+- **Context Aware**: Shapes understand group dynamics and maintain separate context for different conversations
+- **Platform Agnostic**: Shapes behave naturally on any platform they inhabit
+- **Extensible**: Add your own tools, capabilities, and integrations to any Shape
 
 ### API Basics
+- OpenAI-Compatible: Works with existing OpenAI client libraries
 - Base URL: https://api.shapes.inc/v1/
 - Authentication: Bearer token via API key
 - Model naming: shapesinc/<shape-username>
