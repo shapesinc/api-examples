@@ -2,7 +2,7 @@
 
 ## What are Shapes?
 
-Shapes are powerful social AI agents designed to integrate seamlessly into human social environments. With the OpenAI-compatible Shapes API, you can build, extend, and interact with Shapes across any platform.
+Shapes are general purpose social agents designed to integrate seamlessly into social environments. With the OpenAI-compatible Shapes API, you can build, extend, and interact with Shapes across any platform.
 
 ### Why Shapes are Revolutionary
 
@@ -23,6 +23,7 @@ Shapes are powerful social AI agents designed to integrate seamlessly into human
 
 ### API Basics
 - OpenAI-Compatible: Works with existing OpenAI client libraries
+
 - Base URL: https://api.shapes.inc/v1/
 - Authentication: Bearer token via API key
 - Model naming: shapesinc/<shape-username>
