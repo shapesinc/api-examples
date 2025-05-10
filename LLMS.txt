@@ -1,0 +1,145 @@
+# SHAPES API GUIDE FOR LLMs
+
+## What are Shapes?
+Shapes are general purpose social agents with personalities that can interact across multiple platforms. They function as AI assistants that can participate in conversations, maintain both short-term and long-term memory, and integrate with various applications.
+
+## Key Concepts
+
+### Shape Structure
+- Each Shape has a unique username (e.g., "archibald-brave")
+- Shapes have configured personalities set by their creators
+- Shapes maintain conversation context and memory
+- Shapes can be connected to multiple platforms simultaneously
+
+### API Basics
+- Base URL: https://api.shapes.inc/v1/
+- Authentication: Bearer token via API key
+- Model naming: shapesinc/<shape-username>
+- Endpoint: /chat/completions
+- Rate Limit: 5 requests per minute (rpm) per API key
+
+### Cross-Platform Usage
+The Shapes API can be used to talk to your shape regardless of what other platforms they're connected to. You can have your shape in a Telegram bot and also talk to it through your own application.
+
+### Credit Usage
+NOTE: Premium shapes WILL use credits when accessed via API.
+This is no different than using your premium shape on platforms like X, so plan accordingly.
+
+### Implementation Examples
+
+#### Python
+```python
+import openai
+
+shapes_client = OpenAI(
+    api_key="<your-API-key>",
+    base_url="https://api.shapes.inc/v1/",
+)
+
+response = shapes_client.chat.completions.create(
+    model="shapesinc/<shape-username>",
+    messages=[
+        {"role": "user", "content": "Hello"}
+    ]
+)
+```
+
+#### JavaScript
+```javascript
+const openai = require("openai");
+
+const shapes_client = new OpenAI({
+    apiKey: "<your-API-key>",
+    baseURL: "https://api.shapes.inc/v1",
+});
+
+const response = await shapes_client.chat.completions.create({
+    model: "shapesinc/<shape-username>",
+    messages: [
+        { role: "user", content: "Hello" }
+    ]
+});
+```
+
+### Special Headers
+These header parameters allow your Shape to know who is speaking to it and where the conversation is happening. When a Shape is active in multiple channels (e.g., different Slack channels), it will maintain separate context for each channel.
+
+```
+X-User-Id: user_id
+```
+- This is the user ID of the person sending the message
+- Allows the Shape to know who is speaking to it
+- Helps maintain consistent user-specific responses
+
+```
+X-Channel-Id: channel_id
+```
+- This is the channel ID where the message was sent
+- Allows the Shape to maintain separate conversation contexts
+- Knowledge is sandboxed at the channel level
+- If a Shape is active in multiple channels, it will reply to each separately
+
+Example with headers:
+```python
+response = shapes_client.chat.completions.create(
+    model="shapesinc/<shape-username>",
+    messages=[
+        {"role": "user", "content": "Hello"}
+    ],
+    headers={
+        "X-User-Id": "user123",
+        "X-Channel-Id": "channel456"
+    }
+)
+```
+
+### Commands
+Shapes support these commands, which must be included directly in the user message:
+
+- !reset - Reset the Shape's long-term memory
+- !sleep - Generate long-term memory on demand
+- !dashboard - Access configuration dashboard
+- !info - Get shape information
+- !web - Search the web
+- !help - Get help with commands
+- !imagine - Generate images
+- !wack - Reset short-term memory
+
+Example of command usage:
+```python
+response = shapes_client.chat.completions.create(
+    model="shapesinc/<shape-username>",
+    messages=[
+        {"role": "user", "content": "!reset"}
+    ]
+)
+```
+
+### Features and Limitations
+- Vision Support: Send OpenAI API compatible image_url
+- Tool Calling: Supported for specific models
+- Voice Features: Free voice for all shapes
+- No System Messages: Shape personality comes from configuration
+- No Message History: API relies on Shape's built-in memory (only the last "user" message is processed)
+- No Streaming: Only full responses
+- No Parameter Control: Settings locked to shapes.inc configuration
+
+#### Rate Limit Policy
+If the standard rate limits don't work for your application, you can request an increase by emailing hi@shapes.inc. Rate limits are managed on a shape-by-shape basis to ensure a smooth experience for all users.
+
+### Available Integrations
+- Telegram
+- Revolt
+- Slack
+- Bluesky
+- IRC
+- Chess
+- Voice
+- Email
+- Text
+
+### Get Started
+1. Generate an API Key at https://shapes.inc/developer
+2. Each API Key is tied to a specific Shape
+3. Use the appropriate client library (OpenAI-compatible)
+4. Implement in your application 
