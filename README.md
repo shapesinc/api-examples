@@ -131,6 +131,63 @@ Shapes now support the following commands:
 | Voice Configuration | Option to disable voice transcripts (set via shapes.inc) |
 | Voice Formatting | Improved formatting for voice URLs with new line separation |
 
+
+## API Multimodal Support
+
+The Shapes API supports multiple types of input modalities:
+
+### Image Support
+You can send image URLs in the API request using this format:
+```json
+{
+  "model": "shapesinc/your_shape",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What's in this image?"
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://example.com/image.jpg"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Audio Support
+You can send audio URLs in the API request using this format:
+```json
+{
+  "model": "shapesinc/your_shape",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Please transcribe and respond to this audio message"
+        },
+        {
+          "type": "audio_url",
+          "audio_url": {
+            "url": "https://example.com/audio.mp3"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Supported audio formats: mp3, wav, ogg
+
 ## Important Notes
 
 ### Current Limitations
@@ -141,7 +198,7 @@ Shapes now support the following commands:
 | No Message History | API relies on Shape's built-in memory |
 | No Streaming | Only full responses are supported |
 | No Parameter Control | Temperature and other settings locked to shapes.inc settings configured for the Shape |
-| Extensions | Tool calling, Multi-agent Communication Protocol (MCP), vision support |
+| Multimodility support limited to 1 input each only | you can only send 1 image_url, 1 audio_url with a user message. note: both image and audio urls can be sent at the same time.
 
 Note: Shapes set on Premium Engines **WILL** use credits when accessed via API.
 
