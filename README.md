@@ -198,7 +198,7 @@ Supported audio formats: mp3, wav, ogg
 | No Message History | API relies on Shape's built-in memory |
 | No Streaming | Only full responses are supported |
 | No Parameter Control | Temperature and other settings locked to shapes.inc settings configured for the Shape |
-| Multimodility support limited to 1 input each only | you can only send 1 image_url, 1 audio_url with a user message. note: both image and audio urls can be sent at the same time.
+| Multimodility support limited to 1 input only | you can only send 1 image_url or 1 audio_url with a user message. if both image and audio urls are provided, only the audio url is processed
 
 Note: Shapes set on Premium Engines **WILL** use credits when accessed via API.
 
