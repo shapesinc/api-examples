@@ -69,6 +69,113 @@ const ALREADY_ACTIVE_MESSAGE = () => `🤖 I am already active in this channel f
 const NOT_ACTIVE_MESSAGE = () => `🤖 I am not active in this channel. Use \`/activate\` first.`;
 const DEACTIVATE_MESSAGE = () => `🤖 I am no longer active for **${shapeUsername}** in this channel.`;
 
+// --- Media URL Handling ---
+const MEDIA_EXTENSIONS = [
+    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', // images
+    '.mp4', '.webm', '.mov', // videos
+    '.mp3', '.ogg', '.wav'  // audio
+];
+
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov'];
+const AUDIO_EXTENSIONS = ['.mp3', '.ogg', '.wav'];
+
+function getMediaType(url) {
+    if (typeof url !== 'string') return null;
+    try {
+        if (!url.toLowerCase().startsWith('http://') && !url.toLowerCase().startsWith('https://')) {
+            return null;
+        }
+        const parsedUrl = new URL(url);
+        const path = parsedUrl.pathname.toLowerCase();
+        const pathOnly = path.split('?')[0].split('#')[0];
+
+        if (IMAGE_EXTENSIONS.some(ext => pathOnly.endsWith(ext))) return 'image';
+        if (VIDEO_EXTENSIONS.some(ext => pathOnly.endsWith(ext))) return 'video';
+        if (AUDIO_EXTENSIONS.some(ext => pathOnly.endsWith(ext))) return 'audio';
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function formatShapeResponseForGuilded(shapeResponse) {
+    if (typeof shapeResponse !== 'string' || shapeResponse.trim() === "") {
+        return { content: shapeResponse }; // Return original if empty or not string
+    }
+
+    const lines = shapeResponse.split('\n');
+    let mediaUrl = null;
+    let contentLines = [];
+    let mediaUrlFoundAndProcessed = false;
+
+    // Iterate backwards to find the last media URL, assuming it's often at the end
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim();
+        // Attempt to unwrap if it's like <url>
+        const unwrappedLine = line.startsWith('<') && line.endsWith('>')
+                            ? line.substring(1, line.length - 1)
+                            : line;
+        
+        const mediaType = getMediaType(unwrappedLine);
+
+        if (mediaType) {
+            mediaUrl = unwrappedLine;
+            // Assume lines before this one are content, if this is the *last* line and a media URL
+            if (i === lines.length - 1) {
+                contentLines = lines.slice(0, i);
+            } else {
+                // If media URL is in the middle, things get complex.
+                // For now, let's prioritize the case where media URL is the last distinct part.
+                // Or if the entire message is just the URL.
+                // This logic might need refinement for URLs embedded mid-text.
+                // For simplicity, if a media URL is found, we take all *other* lines as content.
+                contentLines = lines.filter((_, index) => index !== i);
+            }
+            mediaUrlFoundAndProcessed = true;
+            break; 
+        }
+    }
+
+    let messageContent = shapeResponse; // Default to original response
+    const embeds = [];
+
+    if (mediaUrlFoundAndProcessed) {
+        messageContent = contentLines.join('\n').trim();
+        const mediaType = getMediaType(mediaUrl); // Get type of the final chosen mediaUrl
+
+        if (mediaType === 'image' && mediaUrl) {
+            embeds.push({ image: { url: mediaUrl } });
+            // If there's no other textual content, just send the embed
+            if (messageContent === "") {
+                return { embeds };
+            }
+            return { content: messageContent, embeds };
+        } else if ((mediaType === 'audio' || mediaType === 'video') && mediaUrl) {
+            // For audio/video, append the URL to the content for Guilded to auto-embed
+            if (messageContent === "") {
+                messageContent = mediaUrl;
+            } else {
+                messageContent += '\n' + mediaUrl;
+            }
+            return { content: messageContent }; // No special 'embeds' object
+        }
+        // If mediaUrl was found but type is null (shouldn't happen if getMediaType is robust)
+        // or if it's some other type we don't explicitly handle with embeds,
+        // fall through to default behavior (send original content or content + URL).
+        // This case should ideally be covered by the logic above.
+        // If messageContent became just the URL, that's fine.
+        if (messageContent === "" && mediaUrl) { // e.g. if only a non-image media URL was sent
+             return { content: mediaUrl };
+        }
+        // If there was text and a non-image media URL, it's already appended to messageContent
+        return { content: messageContent };
+    }
+
+    // No specific media URL found to make a special embed, send original content
+    return { content: shapeResponse };
+}
+
 // --- Shapes API Command Configuration ---
 // These are Shapes API commands that might not return a verbose reply.
 // The bot will provide a generic confirmation if the Shape's response is empty.
@@ -152,11 +259,13 @@ async function processShapeApiCommand(guildedMessage, guildedCommandName, baseSh
 
         // Handle response
         if (shapeResponse && shapeResponse.trim() !== "") {
+            const replyPayload = formatShapeResponseForGuilded(shapeResponse);
             // If Shape API returned an error message (like timeout or rate limit from sendMessageToShape), display it
-            if (shapeResponse.startsWith("Sorry,") || shapeResponse.startsWith("Too many requests")) {
-                await guildedMessage.reply(shapeResponse);
+            // These error messages from sendMessageToShape are plain strings.
+            if (typeof replyPayload.content === 'string' && (replyPayload.content.startsWith("Sorry,") || replyPayload.content.startsWith("Too many requests"))) {
+                await guildedMessage.reply(replyPayload.content);
             } else {
-                await guildedMessage.reply(shapeResponse);
+                await guildedMessage.reply(replyPayload);
             }
         } else {
             // Shape's response was empty or just whitespace
@@ -290,10 +399,11 @@ client.on("messageCreated", async (message) => {
             const shapeResponse = await sendMessageToShape(userId, message.channelId, contentForShape);
 
             if (shapeResponse && shapeResponse.trim() !== "") {
-                 if (shapeResponse.startsWith("Sorry,") || shapeResponse.startsWith("Too many requests")) {
-                    await message.reply(shapeResponse); // Display API-side error messages
+                const replyPayload = formatShapeResponseForGuilded(shapeResponse);
+                 if (typeof replyPayload.content === 'string' && (replyPayload.content.startsWith("Sorry,") || replyPayload.content.startsWith("Too many requests"))) {
+                    await message.reply(replyPayload.content); // Display API-side error messages
                 } else {
-                    await message.reply(shapeResponse);
+                    await message.reply(replyPayload);
                 }
             } else {
                 console.log("[Regular Message] No valid response from Shapes API or response was empty.");
