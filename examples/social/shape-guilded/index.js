@@ -62,11 +62,19 @@ function saveActiveChannels() {
     }
 }
 
+// --- Message Constants ---
 const START_MESSAGE_ACTIVATE = () => `🤖 Hello! I am now active for **${shapeUsername}** in this channel. All messages here will be forwarded.`;
-const START_MESSAGE_RESET = () => `🤖 The context for **${shapeUsername}** in this channel has been reset for you. You can start a new conversation.`;
+const START_MESSAGE_RESET = () => `🤖 The long-term memory for **${shapeUsername}** in this channel has been reset for you. You can start a new conversation.`;
 const ALREADY_ACTIVE_MESSAGE = () => `🤖 I am already active in this channel for **${shapeUsername}**.`;
 const NOT_ACTIVE_MESSAGE = () => `🤖 I am not active in this channel. Use \`/activate\` first.`;
 const DEACTIVATE_MESSAGE = () => `🤖 I am no longer active for **${shapeUsername}** in this channel.`;
+
+// --- Shapes API Command Configuration ---
+// These are Shapes API commands that might not return a verbose reply.
+// The bot will provide a generic confirmation if the Shape's response is empty.
+// Note: !reset has its own custom confirmation message (START_MESSAGE_RESET).
+const SHAPES_COMMANDS_WITH_POTENTIALLY_SILENT_SUCCESS = ["!sleep", "!wack"];
+
 
 // Function to send a message to the Shapes API
 async function sendMessageToShape(userId, channelId, content) {
@@ -85,7 +93,7 @@ async function sendMessageToShape(userId, channelId, content) {
                     "X-User-Id": userId,
                     "X-Channel-Id": channelId,
                 },
-                timeout: 50000, // 50 seconds timeout
+                timeout: 60000, // 60 seconds timeout (increased for potentially longer commands like !imagine)
             }
         );
 
@@ -94,20 +102,79 @@ async function sendMessageToShape(userId, channelId, content) {
             console.log(`[Shapes API] Response received: "${shapeResponseContent}"`);
             return shapeResponseContent;
         } else {
-            console.error("[Shapes API] Unexpected response structure:", response.data);
-            return "Sorry, I couldn't get a clear response from the Shape.";
+            console.warn("[Shapes API] Unexpected response structure or empty choices:", response.data);
+            return ""; // Return empty string for consistent handling
         }
     } catch (error) {
         console.error("[Shapes API] Error during communication:", error.response ? error.response.data : error.message);
-        if (error.code === 'ECONNABORTED') {
+        if (error.code === 'ECONNABORTED' || error.message.toLowerCase().includes('timeout')) {
             return "Sorry, the request to the Shape timed out.";
         }
         if (error.response && error.response.status === 429) {
             return "Too many requests to the Shapes API. Please try again later.";
         }
-        return "Sorry, there was an error connecting to the Shape.";
+        // For other errors, throw it so processShapeApiCommand can catch and give a generic error to user
+        throw error;
     }
 }
+
+// Helper function for processing Shapes API commands from Guilded commands
+async function processShapeApiCommand(guildedMessage, guildedCommandName, baseShapeCommand, requiresArgs = false, commandArgs = []) {
+    const channelId = guildedMessage.channelId;
+    const userId = guildedMessage.createdById;
+
+    if (!activeChannels.has(channelId)) {
+        await guildedMessage.reply(NOT_ACTIVE_MESSAGE());
+        return;
+    }
+
+    let fullShapeCommand = baseShapeCommand;
+    if (requiresArgs) {
+        const argString = commandArgs.join(" ");
+        if (!argString) {
+            await guildedMessage.reply(`Please provide the necessary arguments for \`/${guildedCommandName}\`. Example: \`/${guildedCommandName} your arguments\``);
+            return;
+        }
+        fullShapeCommand = `${baseShapeCommand} ${argString}`;
+    }
+
+    console.log(`[Bot Command: /${guildedCommandName}] Sending to Shape API: User ${userId}, Channel ${channelId}, Content: "${fullShapeCommand}"`);
+    try {
+        // Typing indicator
+        try {
+            await client.rest.put(`/channels/${channelId}/typing`);
+        } catch (typingError) {
+            console.warn(`[Typing Indicator] Error for /${guildedCommandName}:`, typingError.message);
+        }
+
+        // Send the command to Shapes API
+        const shapeResponse = await sendMessageToShape(userId, channelId, fullShapeCommand);
+
+        // Handle response
+        if (shapeResponse && shapeResponse.trim() !== "") {
+            // If Shape API returned an error message (like timeout or rate limit from sendMessageToShape), display it
+            if (shapeResponse.startsWith("Sorry,") || shapeResponse.startsWith("Too many requests")) {
+                await guildedMessage.reply(shapeResponse);
+            } else {
+                await guildedMessage.reply(shapeResponse);
+            }
+        } else {
+            // Shape's response was empty or just whitespace
+            if (baseShapeCommand === "!reset") {
+                await guildedMessage.reply(START_MESSAGE_RESET());
+            } else if (SHAPES_COMMANDS_WITH_POTENTIALLY_SILENT_SUCCESS.includes(baseShapeCommand)) {
+                await guildedMessage.reply(`The command \`/${guildedCommandName}\` has been sent to **${shapeUsername}**. It may have been processed silently.`);
+            } else {
+                // For commands expected to give a response (e.g., !info, !help, !web, !imagine, !dashboard)
+                await guildedMessage.reply(`**${shapeUsername}** didn't provide a specific textual response for \`/${guildedCommandName}\`. The action might have been completed, or it may require a different interaction.`);
+            }
+        }
+    } catch (error) { // Catches errors thrown by sendMessageToShape (e.g., network issues not handled as string returns)
+        console.error(`[Bot Command: /${guildedCommandName}] Error during Shapes API call or Guilded reply:`, error);
+        await guildedMessage.reply(`Sorry, there was an error processing your \`/${guildedCommandName}\` command with **${shapeUsername}**.`);
+    }
+}
+
 
 // Load active channels on startup
 loadActiveChannels();
@@ -116,72 +183,44 @@ loadActiveChannels();
 client.on("ready", () => {
     console.log(`Bot logged in as ${client.user?.name}!`);
     console.log(`Ready to process messages for Shape: ${shapeUsername} (Model: ${SHAPES_MODEL_NAME}).`);
+    console.log(`Active channels on startup: ${Array.from(activeChannels).join(', ') || 'None'}`);
 });
 
 // Event handler for new messages
 client.on("messageCreated", async (message) => {
-    // Ignore messages from the bot itself or other bots
     if (message.createdById === client.user?.id || message.author?.type === "bot") {
         return;
     }
-
-    // Ignore messages without content (e.g., embeds without text)
     if (!message.content || message.content.trim() === "") {
         return;
     }
 
     const commandPrefix = "/";
-    const guildedUserName = message.author?.name || "Unknown User"; // Get username
+    const guildedUserName = message.author?.name || "Unknown User";
 
-    // Command handling
     if (message.content.startsWith(commandPrefix)) {
         const [command, ...args] = message.content.slice(commandPrefix.length).trim().split(/\s+/);
-        const channelId = message.channelId;
+        const lowerCaseCommand = command.toLowerCase();
+        const channelId = message.channelId; // For activate/deactivate logic
+        // userId is sourced within processShapeApiCommand from message.createdById
 
-        if (command.toLowerCase() === "activate") {
+        // Bot-specific commands
+        if (lowerCaseCommand === "activate") {
             if (activeChannels.has(channelId)) {
                 await message.reply(ALREADY_ACTIVE_MESSAGE());
             } else {
                 activeChannels.add(channelId);
-                saveActiveChannels(); // Save after adding
+                saveActiveChannels();
                 console.log(`Bot activated in channel: ${channelId}`);
                 await message.reply(START_MESSAGE_ACTIVATE());
             }
             return;
         }
 
-        if (command.toLowerCase() === "reset") {
-            if (activeChannels.has(channelId)) {
-                console.log(`Context reset initiated by User ${message.createdById} in channel: ${channelId}`);
-
-                // The content of START_MESSAGE_RESET() is what the Shapes API will "detect"
-                // as a signal to reset the conversation history.
-                const resetSignalContent = START_MESSAGE_RESET();
-
-                try {
-                    // Send this message to the Shapes API.
-                    // The API is expected to interpret this specific message content as a reset command
-                    // for the given user (message.createdById) and channel (channelId).
-                    await sendMessageToShape(message.createdById, channelId, resetSignalContent);
-                    console.log(`Sent reset signal to Shapes API for channel ${channelId}, user ${message.createdById}`);
-
-                    // After successfully signaling the API, inform the user in Guilded.
-                    await message.reply(START_MESSAGE_RESET());
-                } catch (error) {
-                    console.error(`Error during context reset process for channel ${channelId}, user ${message.createdById}:`, error);
-                    // Inform the user about the failure.
-                    await message.reply("Sorry, there was an error trying to reset the context with the Shape.");
-                }
-            } else {
-                await message.reply(NOT_ACTIVE_MESSAGE());
-            }
-            return;
-        }
-
-        if (command.toLowerCase() === "deactivate") { // Optional: Deactivation command
+        if (lowerCaseCommand === "deactivate") {
             if (activeChannels.has(channelId)) {
                 activeChannels.delete(channelId);
-                saveActiveChannels(); // Save after removing
+                saveActiveChannels();
                 console.log(`Bot deactivated in channel: ${channelId}`);
                 await message.reply(DEACTIVATE_MESSAGE());
             } else {
@@ -189,40 +228,82 @@ client.on("messageCreated", async (message) => {
             }
             return;
         }
+
+        // Shapes API commands (will check for active channel inside processShapeApiCommand)
+        switch (lowerCaseCommand) {
+            case "reset": // Resets Shape's long-term memory for the channel/user
+                await processShapeApiCommand(message, "reset", "!reset");
+                break;
+            case "sleep": // Triggers Shape's long-term memory generation
+                await processShapeApiCommand(message, "sleep", "!sleep");
+                break;
+            case "dashboard": // Gets link to Shape's configuration dashboard
+                await processShapeApiCommand(message, "dashboard", "!dashboard");
+                break;
+            case "info": // Gets Shape's information
+                await processShapeApiCommand(message, "info", "!info");
+                break;
+            case "web": // Searches the web via the Shape
+                await processShapeApiCommand(message, "web", "!web", true, args);
+                break;
+            case "help": // Gets Shape's help for its commands
+                await processShapeApiCommand(message, "help", "!help");
+                break;
+            case "imagine": // Generates images via the Shape
+                await processShapeApiCommand(message, "imagine", "!imagine", true, args);
+                break;
+            case "wack": // Resets Shape's short-term memory
+                await processShapeApiCommand(message, "wack", "!wack");
+                break;
+            default:
+                // If the channel is active and it's an unknown slash command,
+                // you might choose to inform the user or ignore it.
+                // For now, if it's not a recognized command, it won't be processed further by this block.
+                // If activeChannels.has(message.channelId) is true, and it wasn't a command,
+                // it will fall through to the regular message forwarding logic.
+                // However, since it starts with "/", it's unlikely to be intended for the Shape as a normal message.
+                if (activeChannels.has(message.channelId)) {
+                     // message.reply(`Unknown command: \`/${command}\`. Try \`/help\` if you need assistance with the Shape's commands, or ensure the bot is active with \`/activate\`.`);
+                }
+                // If not active, it will just be ignored, which is fine.
+                return; // Important: stop processing if it was a command attempt
+        }
+        return; // Ensure command processing stops here
     }
 
     // If the channel is active and it's not a command message:
     if (activeChannels.has(message.channelId)) {
         const originalContent = message.content;
-        // Prepend username to the actual message
+        const userId = message.createdById;
         const contentForShape = `${guildedUserName}: ${originalContent}`;
 
-        console.log(`Message from User ${message.createdById} (${guildedUserName}) in active channel ${message.channelId}: "${originalContent}"`);
-        console.log(`Sending to Shape: "${contentForShape}"`); // Logging the modified message
+        console.log(`[Regular Message] User ${userId} (${guildedUserName}) in active channel ${message.channelId}: "${originalContent}"`);
+        console.log(`[Regular Message] Sending to Shape: "${contentForShape}"`);
 
         try {
-            // Indicator that the bot is "typing" (optional, but nice)
             try {
                 await client.rest.put(`/channels/${message.channelId}/typing`);
             } catch (typingError) {
                 console.warn("[Typing Indicator] Error sending typing indicator:", typingError.message);
             }
 
-            // The modified message (contentForShape) is sent to the API
-            const shapeResponse = await sendMessageToShape(message.createdById, message.channelId, contentForShape);
+            const shapeResponse = await sendMessageToShape(userId, message.channelId, contentForShape);
 
             if (shapeResponse && shapeResponse.trim() !== "") {
-                await message.reply(shapeResponse);
+                 if (shapeResponse.startsWith("Sorry,") || shapeResponse.startsWith("Too many requests")) {
+                    await message.reply(shapeResponse); // Display API-side error messages
+                } else {
+                    await message.reply(shapeResponse);
+                }
             } else {
-                console.log("No valid response from Shapes API or response was empty.");
-                // Optional: Inform user that no response came
-                // await message.reply("I didn't receive a response.");
+                console.log("[Regular Message] No valid response from Shapes API or response was empty.");
+                // Optionally, you can inform the user if the Shape doesn't reply
+                // await message.reply(`**${shapeUsername}** didn't send a reply.`);
             }
-        } catch (err) {
-            console.error("Error sending response to Guilded:", err);
-            // Send an error message to the channel if something goes wrong
+        } catch (err) { // Catches errors from sendMessageToShape if it throws
+            console.error("[Regular Message] Error sending message to Shape or response to Guilded:", err);
             try {
-                await message.reply("Oops, something went wrong while processing your message.");
+                await message.reply("Oops, something went wrong while trying to talk to the Shape.");
             } catch (replyError) {
                 console.error("Could not send error message to Guilded:", replyError);
             }
