@@ -45,7 +45,7 @@ You will need to generate an API Key. Every API Key is tied to a specific Shape.
 ### 🐍 Python
 
 ```python
-import openai
+from openai import OpenAI
 
 shapes_client = OpenAI(
     api_key="<your-API-key>",
