@@ -58,7 +58,7 @@ A WhatsApp bot powered by the Shapes API that provides AI-powered conversational
 2. Open the generated Ngrok URL in your browser to scan the QR code with WhatsApp.
 
 ## Usage Commands
-- `!shape [query]`: AI query in group chats
+- `!ping`: Triggers the bot
 - Automatically process replies on DM
 
 ## Environment Configuration

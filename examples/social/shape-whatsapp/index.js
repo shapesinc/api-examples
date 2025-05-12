@@ -108,7 +108,6 @@ client.on('message', async (msg) => {
     const isGroup = chat.isGroup;
     const isDirectMessage = !isGroup;
 
-    if (messageBody === '!ping') return msg.reply('pong');
 
     if (messageBody.startsWith('!ask ')) {
         const query = msg.body.slice(5).trim();
@@ -116,7 +115,7 @@ client.on('message', async (msg) => {
         await chat.sendStateTyping();
         const reply = await processWithShapes(query, userId, threadId);
         await chat.clearState();
-        return msg.reply(reply);
+        return msg.reply(reply); 
     }
 
     if (isGroup && messageBody.startsWith('!shape ')) {
@@ -125,7 +124,7 @@ client.on('message', async (msg) => {
         await chat.sendStateTyping();
         const reply = await processWithShapes(query, userId, threadId);
         await chat.clearState();
-        return msg.reply(reply);
+        return msg.reply(reply); 
     }
 
     const isDirectlyAddressed = isDirectedToBot(msg, client.info);
@@ -140,8 +139,21 @@ client.on('message', async (msg) => {
         await chat.sendStateTyping();
         const reply = await processWithShapes(contentToProcess, userId, threadId);
         await chat.clearState();
-        return msg.reply(reply);
+        return msg.reply(reply); // Reply directly to the message
     }
+});
+
+
+client.on('message_create', async message => { 
+	if (message.body === '!ping') {
+        const userId = message.from;
+        const chat = await message.getChat(); 
+        const threadId = chat.id._serialized;
+        const content = message.body; 
+
+        const reply = await processWithShapes(content, userId, threadId);
+		message.reply(reply);
+	}
 });
 
 client.initialize();
