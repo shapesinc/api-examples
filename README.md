@@ -15,10 +15,10 @@ Star and contribute to this repository to receive free hosting for your integrat
 ## What is the Shapes API?
 Shapes API provides a programmatic way to integrate Shapes into any application or platform. It follows the OpenAI-compatible API standard, making it easy to implement with existing libraries and SDKs.
 
-To learn more about implementing Shapes in your app, check out our [examples repository](https://github.com/shapesinc/api).
+To get a sense of what’s possible, see what people have already built: Omegle with Shapes (https://omegle-ai.vercel.app/), Playing Chess with Shapes (https://shapeschess.vercel.app/), Shapes on Telegram (https://t.me/shapesinc), or WhatsApp any Shape at +1 (424) 452-2786
 
 ## Getting Started
-You will need to generate an API Key. Every API Key is tied to a specific Shape. Get yours [here](https://shapes.inc/developer)
+You will need to generate an API Key. Get yours [here](https://shapes.inc/developer)
 
 <img width="807" alt="API Key Generation" src="https://github.com/user-attachments/assets/ead6f28a-300b-4dcf-a555-313b39656ad6" />
 
