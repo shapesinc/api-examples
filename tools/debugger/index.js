@@ -4,6 +4,16 @@ import https from 'node:https';
 import { URL } from 'node:url';
 import chalk from 'chalk';
 import { getApiBaseUrl } from './src/utils.js';
+/**
+ * Mask a token showing only the last 4 characters.
+ * @param {string} token
+ * @returns {string}
+ */
+function maskToken(token) {
+  const t = String(token || '');
+  const last = t.slice(-4);
+  return '****' + last;
+}
 
 // Configuration
 const PORT    = process.env.PORT || 8090;
@@ -17,7 +27,39 @@ function prettyPrintRequest(req, bodyBuf) {
   console.log(chalk.bold.underline('\n=== Request ==='));
   console.log(chalk.bold('Method:'), req.method);
   console.log(chalk.bold('URL:'), req.url);
-  // TODO: expand headers & body formatting here
+
+  // Headers
+  console.log(chalk.bold('Headers:'));
+  for (const [name, val] of Object.entries(req.headers)) {
+    const value = Array.isArray(val) ? val.join(', ') : val;
+    let display = value;
+    const lower = name.toLowerCase();
+    if (lower === 'authorization') {
+      const parts = String(value).split(' ');
+      if (parts.length > 1) {
+        const scheme = parts.shift();
+        const token = parts.join(' ');
+        display = `${scheme} ${maskToken(token)}`;
+      } else {
+        display = maskToken(value);
+      }
+    } else if (lower === 'x-user-auth') {
+      display = maskToken(value);
+    }
+    console.log(`  ${name}: ${display}`);
+  }
+
+  // Body
+  if (bodyBuf && bodyBuf.length) {
+    console.log(chalk.bold('Body:'));
+    const str = bodyBuf.toString('utf8');
+    try {
+      const obj = JSON.parse(str);
+      console.log(JSON.stringify(obj, null, 2));
+    } catch (e) {
+      console.log(str);
+    }
+  }
 }
 
 /**
@@ -26,7 +68,39 @@ function prettyPrintRequest(req, bodyBuf) {
 function prettyPrintResponse(res, bodyBuf) {
   console.log(chalk.bold.underline('\n=== Response ==='));
   console.log(chalk.bold('Status:'), res.statusCode);
-  // TODO: expand headers & body formatting here
+
+  // Headers
+  console.log(chalk.bold('Headers:'));
+  for (const [name, val] of Object.entries(res.headers || {})) {
+    const value = Array.isArray(val) ? val.join(', ') : val;
+    let display = value;
+    const lower = name.toLowerCase();
+    if (lower === 'authorization') {
+      const parts = String(value).split(' ');
+      if (parts.length > 1) {
+        const scheme = parts.shift();
+        const token = parts.join(' ');
+        display = `${scheme} ${maskToken(token)}`;
+      } else {
+        display = maskToken(value);
+      }
+    } else if (lower === 'x-user-auth') {
+      display = maskToken(value);
+    }
+    console.log(`  ${name}: ${display}`);
+  }
+
+  // Body
+  if (bodyBuf && bodyBuf.length) {
+    console.log(chalk.bold('Body:'));
+    const str = bodyBuf.toString('utf8');
+    try {
+      const obj = JSON.parse(str);
+      console.log(JSON.stringify(obj, null, 2));
+    } catch {
+      console.log(str);
+    }
+  }
 }
 
 
