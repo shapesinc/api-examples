@@ -20,6 +20,7 @@
         "start": "node main.js"
     },
     "dependencies": {
+        "chalk": "^5.4.1",
         "dotenv": "^16.5.0",
         "openai": "^4.97.0"
     },
