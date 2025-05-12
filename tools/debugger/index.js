@@ -52,8 +52,24 @@ function prettyPrintJson(obj, { isResponse = false } = {}) {
       } else {
         console.log(indent + chalk.gray(trimmed));
       }
+    } else if (trimmed.startsWith('"model"')) {
+      // highlight only model value
+      const partsModel = trimmed.match(/^("model":\s*)(".*")(,?)$/);
+      if (partsModel) {
+        const [, keyPart, valuePart, comma] = partsModel;
+        console.log(indent + chalk.gray(keyPart) + chalk.blue(valuePart) + (comma || ''));
+      } else {
+        console.log(indent + chalk.gray(trimmed));
+      }
     } else if (trimmed.startsWith('"content"')) {
-      console.log(indent + trimmed);
+      // highlight only content value
+      const partsContent = trimmed.match(/^("content":\s*)(".*")(,?)$/);
+      if (partsContent) {
+        const [, keyPart, valuePart, comma] = partsContent;
+        console.log(indent + chalk.gray(keyPart) + chalk.white(valuePart) + (comma || ''));
+      } else {
+        console.log(indent + chalk.gray(trimmed));
+      }
     } else if (isResponse && trimmed.startsWith('"finish_reason"')) {
       const parts = trimmed.match(/^"finish_reason":\s*"([^"]+)"(,?)$/);
       if (parts) {
