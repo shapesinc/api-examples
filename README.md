@@ -3,9 +3,7 @@
 [![image](https://github.com/user-attachments/assets/e98592ca-3b1d-4709-93c6-7e6aa0dfb84a)](https://shapes.inc/slack)
 
 
-[Shapes](https://shapes.inc) are general purpose social agents. You can build for an [existing shape](https://shapes.inc/explore) from our catalogue of millions or [create](https://shapes.inc/create) your own. Shapes have rich personalities, love hanging out in groupchats, and short-term + long-term memory across platforms.
-
-The Shapes API enables developers to connect Shapes across social platforms, games, and other applications. Shapes can meet you anywhere, from your favorite social app or a new project. You can configure a Shape to use some of 50+ models we offer for free across text, image, and voice.
+[Shapes](https://shapes.inc) are general purpose social agents. You can build for an [existing shape](https://shapes.inc/explore) from our catalogue of millions or [create](https://shapes.inc/create) your own. Shapes have rich personalities, love hanging out in groupchats, and short-term + long-term memory across platforms. You can configure a Shape to use some of 50+ models we offer for free across text, image, and voice.
 
 ## Open Source Contributions
 Our API is designed with extensibility as a core principle. You can extend any Shape for tool calling, MCP, and more.
