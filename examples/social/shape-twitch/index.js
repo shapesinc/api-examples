@@ -50,19 +50,29 @@ socket.on('message', async (data) => {
     }
   }
 });
-
-async function processWithShapes(content) {
+async function processWithShapes(content, userId, channelId) {
   try {
     console.log('Sending to Shapes API:', content);
-    const shaperesponse = await shapes.chat.completions.create({
-      model: `shapesinc/${SHAPES_USERNAME}`,
+    const headers = {
+      "X-User-Id": userId
+    };
+
+    if (channelId) {
+      headers["X-Channel-Id"] = channelId;
+    }
+
+    const response = await shapes.chat.completions.create({
+      model: `shapesinc/${SHAPES_USERNAME}`, 
       messages: [
         { role: "user", content: content }
-      ]
+      ],
+      extra_headers: headers 
     });
-    const shaperesponseText = shaperesponse.choices[0].message.content;
+
+    const shaperesponseText = response.choices[0].message.content;
     console.log('Shapes Response:', shaperesponseText);
     return shaperesponseText;
+
   } catch (error) {
     console.error('Error processing with Shapes API:', error.message);
     return `Sorry, I encountered an error while processing your request.`;
