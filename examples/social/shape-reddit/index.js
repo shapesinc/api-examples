@@ -3,7 +3,8 @@ dotenv.config();
 const SHAPES_API_KEY = process.env.SHAPESINC_API_KEY;
 const SHAPES_USERNAME = process.env.SHAPESINC_SHAPE_USERNAME;
 const subreddit = process.env.REDDIT_SUBREDDIT;
-
+const polltime = process.env.POLL_TIME;
+const limit = process.env.LIMIT;
 if (!SHAPES_API_KEY) {
     console.error('SHAPESINC_API_KEY not found in environment variables!');
     process.exit(1);
@@ -78,8 +79,8 @@ const canSummon = (msg) => {
 
 const comments = new CommentStream(client, {
     subreddit,
-    limit: 10,
-    pollTime: 10000
+    limit,
+    polltime,
 });
 
 comments.on('item', async (item) => {
