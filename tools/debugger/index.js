@@ -14,6 +14,62 @@ function maskToken(token) {
   const last = t.slice(-4);
   return '****' + last;
 }
+// Role-based coloring for JSON bodies
+const roleColorMap = {
+  system: chalk.gray,
+  user: chalk.cyan,
+  assistant: chalk.green,
+  function: chalk.yellow
+};
+// Finish-reason coloring for response bodies
+const finishReasonColors = {
+  stop: chalk.green,
+  function_call: chalk.cyan
+};
+/**
+ * Pretty-print JSON with OpenAI chat syntax highlighting.
+ * @param {object} obj - parsed JSON object
+ * @param {object} opts
+ * @param {boolean} opts.isResponse - if true, also highlight finish_reason
+ */
+function prettyPrintJson(obj, { isResponse = false } = {}) {
+  const str = JSON.stringify(obj, null, 2);
+  for (const line of str.split('\n')) {
+    const m = line.match(/^(\s*)(.*)$/);
+    const indent = m ? m[1] : '';
+    const trimmed = m ? m[2] : line;
+    // braces or brackets
+    if (/^[\{\}\[\]],?$/.test(trimmed)) {
+      console.log(indent + chalk.gray(trimmed));
+    } else if (trimmed.startsWith('"role"')) {
+      const parts = trimmed.match(/^"role":\s*"([^"]+)"(,?)$/);
+      if (parts) {
+        const [, role, comma] = parts;
+        const colorFn = roleColorMap[role] || chalk.white;
+        console.log(
+          indent + chalk.gray('"role": ') + colorFn(`"${role}"`) + (comma || '')
+        );
+      } else {
+        console.log(indent + chalk.gray(trimmed));
+      }
+    } else if (trimmed.startsWith('"content"')) {
+      console.log(indent + trimmed);
+    } else if (isResponse && trimmed.startsWith('"finish_reason"')) {
+      const parts = trimmed.match(/^"finish_reason":\s*"([^"]+)"(,?)$/);
+      if (parts) {
+        const [, reason, comma] = parts;
+        const colorFn = finishReasonColors[reason] || chalk.red;
+        console.log(
+          indent + chalk.gray('"finish_reason": ') + colorFn(`"${reason}"`) + (comma || '')
+        );
+      } else {
+        console.log(indent + chalk.gray(trimmed));
+      }
+    } else {
+      console.log(indent + chalk.gray(trimmed));
+    }
+  }
+}
 
 // Configuration
 const PORT    = process.env.PORT || 8090;
@@ -24,7 +80,7 @@ const baseUrl = await getApiBaseUrl();
  * Pretty-print an HTTP request header and body (minimal skeleton)
  */
 function prettyPrintRequest(req, bodyBuf) {
-  console.log(chalk.bold.underline('\n=== Request ==='));
+  console.log(chalk.cyan.bold.underline('\n=== Request ==='));
   console.log(chalk.bold('Method:'), req.method);
   console.log(chalk.bold('URL:'), req.url);
 
@@ -46,7 +102,12 @@ function prettyPrintRequest(req, bodyBuf) {
     } else if (lower === 'x-user-auth') {
       display = maskToken(value);
     }
-    console.log(`  ${name}: ${display}`);
+    // highlight important headers
+    const important = lower === 'authorization' || lower === 'content-type' ||
+      lower.startsWith('x-user-') || lower.startsWith('x-channel-') ||
+      lower.startsWith('x-app-') || lower.startsWith('x-api-');
+    const colorFn = important ? chalk.magenta : chalk.gray;
+    console.log(colorFn(`  ${name}: ${display}`));
   }
 
   // Body
@@ -55,7 +116,7 @@ function prettyPrintRequest(req, bodyBuf) {
     const str = bodyBuf.toString('utf8');
     try {
       const obj = JSON.parse(str);
-      console.log(JSON.stringify(obj, null, 2));
+      prettyPrintJson(obj, { isResponse: false });
     } catch (e) {
       console.log(str);
     }
@@ -66,7 +127,14 @@ function prettyPrintRequest(req, bodyBuf) {
  * Pretty-print an HTTP response status and body (minimal skeleton)
  */
 function prettyPrintResponse(res, bodyBuf) {
-  console.log(chalk.bold.underline('\n=== Response ==='));
+  // colored section title based on status code
+  {
+    const code = res.statusCode;
+    const titleColor = code >= 200 && code < 300 ? chalk.green
+                      : code >= 300 && code < 400 ? chalk.yellow
+                      : chalk.red;
+    console.log(titleColor.bold.underline(`\n=== Response ===`));
+  }
   console.log(chalk.bold('Status:'), res.statusCode);
 
   // Headers
@@ -75,6 +143,7 @@ function prettyPrintResponse(res, bodyBuf) {
     const value = Array.isArray(val) ? val.join(', ') : val;
     let display = value;
     const lower = name.toLowerCase();
+    // mask sensitive tokens
     if (lower === 'authorization') {
       const parts = String(value).split(' ');
       if (parts.length > 1) {
@@ -87,7 +156,12 @@ function prettyPrintResponse(res, bodyBuf) {
     } else if (lower === 'x-user-auth') {
       display = maskToken(value);
     }
-    console.log(`  ${name}: ${display}`);
+    // highlight important headers
+    const important = lower === 'authorization' || lower === 'content-type' ||
+      lower.startsWith('x-user-') || lower.startsWith('x-channel-') ||
+      lower.startsWith('x-app-') || lower.startsWith('x-api-');
+    const colorFn = important ? chalk.magenta : chalk.gray;
+    console.log(colorFn(`  ${name}: ${display}`));
   }
 
   // Body
@@ -96,7 +170,7 @@ function prettyPrintResponse(res, bodyBuf) {
     const str = bodyBuf.toString('utf8');
     try {
       const obj = JSON.parse(str);
-      console.log(JSON.stringify(obj, null, 2));
+      prettyPrintJson(obj, { isResponse: true });
     } catch {
       console.log(str);
     }
