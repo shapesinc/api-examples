@@ -69,7 +69,7 @@ For production deployment:
 1. Create an Azure Web App
 2. Configure the application settings with the same environment variables from your `.env` file
 3. Deploy your code using Azure DevOps, GitHub Actions, or the Azure CLI
-4. Or Simply go to Settings>Channels> Microsoft Teams
+4. Or Simply go to Settings>Channel> Microsoft Teams
 
 ## Usage
 
@@ -83,9 +83,7 @@ Once the bot is added to a Microsoft Teams channel or chat, users can interact w
 ## How It Works
 
 1. The bot receives messages from Microsoft Teams
-2. It removes any bot mentions from the message
-3. It processes the message content through the Shapes API using your custom model
-4. User and conversation IDs are preserved to maintain context
+2. It processes the message content through the Shapes API using your custom model
 5. The response from Shapes is sent back to Teams
 
 ## Troubleshooting
@@ -110,7 +108,7 @@ The application logs important events and errors to the console. Check these log
 
 ## License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License - see [LICENSE](https://github.com/shapesinc/api/blob/main/license) for details.
 
 ## Contribution
 
