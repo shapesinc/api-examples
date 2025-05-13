@@ -57,10 +57,7 @@ To test your bot locally:
 
 ```bash
 # Start your bot
-node index.js
-
-# In a separate terminal, start ngrok
-ngrok http 3978
+ node index.js & ngrok http 3978
 ```
 
 Once ngrok is running, copy the HTTPS URL (e.g., `https://your-ngrok-test.ngrok.io`) and update your bot's messaging endpoint in the Azure portal to `https://your-ngrok-url/api/messages`.
