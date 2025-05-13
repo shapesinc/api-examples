@@ -8,6 +8,8 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
 - Automatically handles direct messages sent to your Shape
 - Connects to the Revolt Websocket API for real-time communication
 - Uses Shapes API with OpenAI-compatible client for your Shape's responses
+- Supports image and audio attachments for multimodal conversations
+- Processes media files and sends them to Shapes API for analysis
 
 ## Prerequisites
 
@@ -36,6 +38,7 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
    REVOLT_TOKEN=your-revolt-bot-token
    SHAPESINC_API_KEY=your-shapes-api-key
    SHAPESINC_SHAPE_USERNAME=your-shape-username
+   REVOLT_SERVER_URL=https://autumn.revolt.chat  # Optional: Override default server URL for attachments
    ```
 
    ## Picture Guide to Setup
@@ -58,32 +61,23 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
 
 3. You can also DM your Shape directly, and it will respond to all messages.
 
+4. Send images or audio files with your messages to enable multimodal conversations:
+   ```
+   @YourShape What do you think of this picture?
+   [attach an image]
+   ```
+
 ## How it Works
 
 This integration uses the Revolt WebSocket API to provide your Shape with real-time message capabilities. When your Shape is mentioned or receives a DM, the integration:
 
 1. Extracts the user's message
-2. Sends the message to the Shapes API using your Shape's identity
-3. Returns your Shape's response back to the Revolt chat
+2. Processes any attached images or audio files
+3. Formats the content appropriately for multimodal API requests
+4. Sends the message and media to the Shapes API using your Shape's identity
+5. Returns your Shape's response back to the Revolt chat
 
 ## Customization
 
 You can use any of your Shapes by changing the `SHAPESINC_SHAPE_USERNAME` in your `.env` file. This allows you to give any of your Shapes a presence on Revolt. 
-
-
-
-
-# Sorayai's Updates
-## -Added picture guide for Revolt bot token + .env setup
-
-## -Updating index.js
-   1-Added code for debugging
-   
-   2-Added code to fix error: 
-  status: 400,
-  data: !DOCTYPE html
-    
-  3-Added chunking code so Shapes on Revolt don't error out when sending long messages 
-    
- 
 
