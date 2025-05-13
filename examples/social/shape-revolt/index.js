@@ -12,6 +12,7 @@ const REVOLT_TOKEN = process.env.REVOLT_TOKEN;
 const SHAPES_API_KEY = process.env.SHAPESINC_API_KEY;
 const SHAPES_USERNAME = process.env.SHAPESINC_SHAPE_USERNAME;
 const REVOLT_API_URL = 'https://api.revolt.chat';
+const REVOLT_SERVER_URL = process.env.REVOLT_SERVER_URL || 'https://autumn.revolt.chat';
 
 // Set up the Shapes API client
 const shapes = new OpenAI({
@@ -154,6 +155,69 @@ async function sendMessage(channelId, content) {
   }
 }
 
+/**
+ * Process attachments from a message to extract image or audio URLs
+ * @param {Array} attachments - Array of attachment objects from Revolt
+ * @returns {Object|null} - Object with image and/or audio URLs, or null if none found
+ */
+function processAttachments(attachments) {
+  if (!attachments || attachments.length === 0) return null;
+  
+  const result = {};
+  
+  for (const attachment of attachments) {
+    // Log attachment information for debugging
+    console.log('Processing attachment:', JSON.stringify(attachment, null, 2));
+    
+    // Get the URL from the attachment
+    let url = '';
+    
+    // Handle different attachment structures from Revolt
+    if (attachment.url) {
+      url = attachment.url;
+    } else if (attachment._id || attachment.id) {
+      // Construct URL based on ID
+      const attachmentId = attachment._id || attachment.id;
+      url = `${REVOLT_SERVER_URL}/attachments/${attachmentId}`;
+    } else if (typeof attachment === 'string' && attachment.includes('/')) {
+      // Handle if attachment is directly a URL string
+      url = attachment;
+    }
+    
+    // Ensure URL is properly encoded if needed
+    if (url && !url.startsWith('http')) {
+      url = `https://${url}`;
+    }
+    
+    console.log('Resolved attachment URL:', url);
+    
+    if (!url) continue;
+    
+    // Check attachment type
+    const contentType = attachment.content_type || '';
+    if (contentType.startsWith('image/') || 
+        url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+      result.image = url;
+      console.log('Found image attachment:', url);
+    } else if (contentType.startsWith('audio/') || 
+              contentType === 'audio/mpeg' || 
+              contentType === 'audio/mp3' ||
+              contentType === 'audio/ogg' ||
+              url.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+      result.audio = url;
+      console.log('Found audio attachment:', url);
+    }
+  }
+  
+  // If no valid attachments found, return null
+  if (!result.image && !result.audio) {
+    return null;
+  }
+  
+  console.log('Final attachments object:', JSON.stringify(result));
+  return result;
+}
+
 // Main bot function
 async function startBot() {
   try {
@@ -203,29 +267,66 @@ async function startBot() {
           
           // Check if bot is mentioned or if it's a DM
           const isMentioned = message.content && message.content.includes(`<@${botId}>`);
+          const hasAttachments = message.attachments && message.attachments.length > 0;
           
           if (isMentioned || isDM) {
             console.log(isDM ? 'Message is in DM' : 'Bot was mentioned!');
             try {
               // Remove the mention from the message if present
-              let content = message.content;
+              let content = message.content || '';
               if (isMentioned) {
                 content = content.replace(new RegExp(`<@${botId}>`, 'g'), '').trim();
               }
               
-              if (!content) {
+              // Process any attachments
+              const attachments = hasAttachments ? processAttachments(message.attachments) : null;
+              
+              // Handle empty messages differently if there are attachments
+              if (!content && !attachments) {
                 await sendMessage(message.channel, "Hello! How can I help you today?");
                 return;
               }
               
-              console.log('Sending to Shapes API:', content);
+              // If we have no text but have attachments, use a generic prompt
+              if (!content && attachments) {
+                content = "Please describe this";
+              }
+              
+              console.log('Sending to Shapes API...');
+              
+              // Prepare API request based on content type
+              let apiMessages;
+              
+              if (attachments) {
+                // Create multimodal content array
+                const contentArray = [{ type: "text", text: content || "Please describe this" }];
+                
+                if (attachments.image) {
+                  console.log('Adding image to API request');
+                  contentArray.push({
+                    type: "image_url",
+                    image_url: { url: attachments.image }
+                  });
+                }
+                
+                if (attachments.audio) {
+                  console.log('Adding audio to API request');
+                  contentArray.push({
+                    type: "audio_url",
+                    audio_url: { url: attachments.audio }
+                  });
+                }
+                
+                apiMessages = [{ role: "user", content: contentArray }];
+              } else {
+                // Text-only request
+                apiMessages = [{ role: "user", content: content }];
+              }
               
               // Call the Shapes API using the OpenAI SDK
               const response = await shapes.chat.completions.create({
                 model: `shapesinc/${SHAPES_USERNAME}`,
-                messages: [
-                  { role: "user", content: content }
-                ],
+                messages: apiMessages,
                 temperature: 0.7,
                 max_tokens: 1000
               });
