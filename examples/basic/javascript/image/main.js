@@ -8,17 +8,25 @@ config();
 
 async function main() {
     try {
-        const shape_api_key = process.env.SHAPESINC_API_KEY;
-        const shape_username = process.env.SHAPESINC_SHAPE_USERNAME;
+        let shape_api_key = process.env.SHAPESINC_API_KEY;
+        let shape_app_id = process.env.SHAPESINC_APP_ID;
+        let shape_username = process.env.SHAPESINC_SHAPE_USERNAME;
 
         // Check for SHAPESINC_API_KEY in .env
         if (!shape_api_key) {
             throw new Error("SHAPESINC_API_KEY not found in .env");
         }
 
+        // Check for SHAPESINC_APP_ID in .env
+        if (!shape_app_id) {
+            // Default app ID for Euclidian - the Shapes API testing app
+            shape_app_id = "f6263f80-2242-428d-acd4-10e1feec44ee"
+        }
+
         // Check for SHAPESINC_SHAPE_USERNAME in .env
         if (!shape_username) {
-            throw new Error("SHAPESINC_SHAPE_USERNAME not found in .env");
+            // Default shape username for Shape Robot - the Shapes API developer shape
+            shape_username = "shaperobot"
         }
 
         const model = `shapesinc/${shape_username}`;
