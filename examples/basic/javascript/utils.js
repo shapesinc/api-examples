@@ -8,7 +8,7 @@ import { URL } from 'node:url'
  * @param {number} timeoutMs
  * @returns {Promise<boolean>}
  */
-function isTcpPortOpen(host = '127.0.0.1', port = 8090, timeoutMs = 200) {
+function isTcpPortOpen(host, port, timeoutMs) {
     return new Promise(resolve => {
         const sock = new net.Socket()
         let settled = false
@@ -35,19 +35,66 @@ function isTcpPortOpen(host = '127.0.0.1', port = 8090, timeoutMs = 200) {
  * @param {number} [opts.timeoutMs]
  * @returns {Promise<string>}
  */
-export async function getApiBaseUrl({
-    prodUrl = 'https://api.shapes.inc/v1',
-    devUrl = 'http://localhost:8080/v1',
-    debugUrl = 'http://localhost:8090/v1',
-    timeoutMs = 200
+async function getBaseUrl({
+    prodUrl,
+    devUrl,
+    debugUrl,
 } = {}) {
     try {
         const debugHost = new URL(debugUrl)
-        const isDebugUp = await isTcpPortOpen(debugHost.hostname, Number(debugHost.port) || (debugHost.protocol === 'https:' ? 443 : 80), timeoutMs)
+        const isDebugUp = await isTcpPortOpen(debugHost.hostname, Number(debugHost.port) || (debugHost.protocol === 'https:' ? 443 : 80), 200)
         const devHost = new URL(devUrl)
-        const isDevUp = await isTcpPortOpen(devHost.hostname, Number(devHost.port) || (devHost.protocol === 'https:' ? 443 : 80), timeoutMs)
+        const isDevUp = await isTcpPortOpen(devHost.hostname, Number(devHost.port) || (devHost.protocol === 'https:' ? 443 : 80), 200)
         return isDebugUp ? debugUrl : isDevUp ? devUrl : prodUrl
     } catch (err) {
         return prodUrl;
     }
+}
+
+/*
+Autodiscover the API server base URL
+Will discover both local server if available
+*/
+export async function getApiServerBaseUrl() {
+    return await getBaseUrl({
+        prodUrl: 'https://api.shapes.inc/v1',
+        devUrl: 'http://localhost:8080/v1',
+        debugUrl: 'http://localhost:8080/v1',
+    })
+}
+
+/*
+Autodiscover the API base URL
+Will discover both local server and a debug proxy if available
+*/
+export async function getApiBaseUrl() {
+    return await getBaseUrl({
+        prodUrl: 'https://api.shapes.inc/v1',
+        devUrl: 'http://localhost:8080/v1',
+        debugUrl: 'http://localhost:8090/v1',
+    })
+}
+
+/*
+Autodiscover the Auth base URL
+Will discover both local server and a debug proxy if available
+*/
+export async function getAuthBaseUrl() {
+    return await getBaseUrl({
+        prodUrl: 'https://api.shapes.inc/auth',
+        devUrl: 'http://localhost:8080/auth',
+        debugUrl: 'http://localhost:8090/auth',
+    })
+}
+
+/*
+Autodiscover the Site base URL
+Will discover both local server and a debug proxy if available
+*/
+export async function getSiteBaseUrl() {
+    return await getBaseUrl({
+        prodUrl: 'https://shapes.inc',
+        devUrl: 'http://localhost:3000',
+        debugUrl: 'http://localhost:3000',
+    })
 }
