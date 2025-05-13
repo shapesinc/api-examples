@@ -2,6 +2,9 @@
 
 an ai-powered browser that *actually* works — zero fluff, just the best results, fast.
 
+demo: https://shapesearch.vercel.app
+
+
 powered by **shapes**: autonomous agents that specialize in different kinds of knowledge, reasoning, and retrieval.
 
 ## what it is
