@@ -58,8 +58,16 @@ An integration for [Revolt](https://revolt.chat) that allows your Shape (social 
    ```
    @YourShape How are you today?
    ```
+   
+   **Example of chat in server:**
+   
+   ![Example of chat in server](https://img.intercomm.in/wy1epy.png)
 
 3. You can also DM your Shape directly, and it will respond to all messages.
+
+   **Example of chat in DM:**
+   
+   ![Example of chat in DM](https://img.intercomm.in/fxb7t9.png)
 
 4. Send images or audio files with your messages to enable multimodal conversations:
    ```
@@ -80,4 +88,3 @@ This integration uses the Revolt WebSocket API to provide your Shape with real-t
 ## Customization
 
 You can use any of your Shapes by changing the `SHAPESINC_SHAPE_USERNAME` in your `.env` file. This allows you to give any of your Shapes a presence on Revolt. 
-
