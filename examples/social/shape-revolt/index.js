@@ -1,21 +1,32 @@
-import { OpenAI } from 'openai';
-import WebSocket from 'ws';
-import { EventEmitter } from 'events';
-import dotenv from 'dotenv';
-import https from 'https';
+const OpenAI = require('openai');
+const WebSocket = require('ws');
+const EventEmitter = require('events');
+const dotenv = require('dotenv');
+const https = require('https');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: '/home/container/bot2/.env' }); //change to your device/host path
+
+// Validate environment variables
+if (!process.env.SHAPESINC_API_KEY) {
+  throw new Error('SHAPESINC_API_KEY is not defined in .env file');
+}
+if (!process.env.REVOLT_TOKEN) {
+  throw new Error('REVOLT_TOKEN is not defined in .env file');
+}
+if (!process.env.SHAPESINC_SHAPE_USERNAME) {
+  throw new Error('SHAPESINC_SHAPE_USERNAME is not defined in .env file');
+}
 
 // Configuration
-const REVOLT_TOKEN = process.env.REVOLT_TOKEN;
-const SHAPES_API_KEY = process.env.SHAPESINC_API_KEY;
+const token = process.env.REVOLT_TOKEN;
+const apiKey = process.env.SHAPESINC_API_KEY;
 const SHAPES_USERNAME = process.env.SHAPESINC_SHAPE_USERNAME;
 const REVOLT_API_URL = 'https://api.revolt.chat';
 
 // Set up the Shapes API client
 const shapes = new OpenAI({
-  apiKey: SHAPES_API_KEY,
+  apiKey: apiKey,
   baseURL: 'https://api.shapes.inc/v1',
 });
 
@@ -28,14 +39,14 @@ const events = new EventEmitter();
 
 // Initialize HTTP client for Revolt API
 const revoltAPI = {
-  async get(endpoint) {
+  get(endpoint) {
     return new Promise((resolve, reject) => {
       const options = {
         hostname: 'api.revolt.chat',
         path: endpoint,
         method: 'GET',
         headers: {
-          'x-bot-token': REVOLT_TOKEN
+          'x-bot-token': token
         }
       };
 
@@ -57,7 +68,7 @@ const revoltAPI = {
     });
   },
 
-  async post(endpoint, body) {
+  post(endpoint, body) {
     return new Promise((resolve, reject) => {
       const data = JSON.stringify(body);
       const options = {
@@ -65,7 +76,7 @@ const revoltAPI = {
         path: endpoint,
         method: 'POST',
         headers: {
-          'x-bot-token': REVOLT_TOKEN,
+          'x-bot-token': token,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(data)
         }
@@ -172,7 +183,7 @@ async function startBot() {
       // Authenticate with bot token
       socket.send(JSON.stringify({
         type: 'Authenticate',
-        token: REVOLT_TOKEN
+        token: token
       }));
     });
     
