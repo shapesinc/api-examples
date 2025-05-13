@@ -32,44 +32,41 @@ async function main() {
 
         // Check for SHAPESINC_APP_ID in .env
         if (!shape_app_id) {
-            shape_app_id = "e1637bd2-e701-41cd-9be0-a7377b4a8f61"
+            // Default app ID for Euclidian - the Shapes API testing app
+            shape_app_id = "f6263f80-2242-428d-acd4-10e1feec44ee"
         }
 
         // Check for SHAPESINC_SHAPE_USERNAME in .env
         if (!shape_username) {
+            // Default shape username for Shape Robot - the Shapes API developer shape
             shape_username = "shaperobot"
         }
 
-        const baseSiteUrl = `https://shapes.inc`;
-        const baseAuthUrl = `https://shapes.inc/auth`;
-        const baseApiUrl = `https://api.shapes.inc/v1`;
-        const baseDevUrl = `http://localhost:8080/v1`;
-        const baseDebugUrl = `http://localhost:8090/v1`;
-
-        let baseUrl = baseApiUrl;
-
-        await (async () => {
-            baseUrl = await getApiBaseUrl()
-        })()
-
         const model = `shapesinc/${shape_username}`;
 
-        console.log(chalk.magenta('→ Using API base URL:'), baseUrl)
-        console.log(chalk.magenta('→ Using model:'), model)
+        let apiUrl = 'https://api.shapes.inc/v1';
+
+        await (async () => {
+            apiUrl = await getApiBaseUrl()
+        })()
+
+        console.log(chalk.magenta('→ API URL :'), apiUrl)
+        console.log(chalk.magenta('→ Model   :'), model)
+        console.log(chalk.magenta('→ App ID  :'), shape_app_id)
 
         console.log("\n")
-
-        // Create the client with the shape API key and the Shapes API base URL
-        const shapes_client = new OpenAI({
-            apiKey: shape_api_key,
-            baseURL: baseUrl
-        });
 
         // If the user provided a message on the command line, use that one
         const userMessage = positionals.length > 0 ? positionals.join(" ") : "Hello. What's your name?";
         const messages = [
             { role: "user", content: userMessage }
         ];
+
+        // Create the client with the shape API key and the Shapes API base URL
+        const shapes_client = new OpenAI({
+            apiKey: shape_api_key,
+            baseURL: apiUrl
+        });
 
         // Set up headers for user identification and conversation context
         const headers = {};
