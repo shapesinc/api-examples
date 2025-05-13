@@ -73,6 +73,8 @@ async function main() {
 
         console.log(chalk.gray("Raw response (non-auth):"), non_auth_resp);
 
+        console.log("\n")
+
         if (non_auth_resp.choices && non_auth_resp.choices.length > 0) {
             console.log(chalk.green("Reply (non-auth):"), non_auth_resp.choices[0].message.content);
         } else {
@@ -153,6 +155,8 @@ async function main() {
         });
 
         console.log(chalk.gray("Raw response:"), resp);
+
+        console.log("\n")
 
         if (resp.choices && resp.choices.length > 0) {
             console.log(chalk.green("Reply:"), resp.choices[0].message.content);

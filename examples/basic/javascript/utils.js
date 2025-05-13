@@ -51,6 +51,22 @@ async function getBaseUrl({
     }
 }
 
+/*
+Autodiscover the API server base URL
+Will discover both local server if available
+*/
+export async function getApiServerBaseUrl() {
+    return await getBaseUrl({
+        prodUrl: 'https://api.shapes.inc/v1',
+        devUrl: 'http://localhost:8080/v1',
+        debugUrl: 'http://localhost:8080/v1',
+    })
+}
+
+/*
+Autodiscover the API base URL
+Will discover both local server and a debug proxy if available
+*/
 export async function getApiBaseUrl() {
     return await getBaseUrl({
         prodUrl: 'https://api.shapes.inc/v1',
@@ -59,6 +75,10 @@ export async function getApiBaseUrl() {
     })
 }
 
+/*
+Autodiscover the Auth base URL
+Will discover both local server and a debug proxy if available
+*/
 export async function getAuthBaseUrl() {
     return await getBaseUrl({
         prodUrl: 'https://api.shapes.inc/auth',
@@ -67,6 +87,10 @@ export async function getAuthBaseUrl() {
     })
 }
 
+/*
+Autodiscover the Site base URL
+Will discover both local server and a debug proxy if available
+*/
 export async function getSiteBaseUrl() {
     return await getBaseUrl({
         prodUrl: 'https://shapes.inc',

@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+
 import http from 'node:http';
 import https from 'node:https';
 import { URL } from 'node:url';
+import { getApiServerBaseUrl } from './src/utils.js';
 import chalk from 'chalk';
-import { getApiBaseUrl } from './src/utils.js';
+
 /**
  * Mask a token showing only the last 4 characters.
  * @param {string} token
@@ -14,6 +16,7 @@ function maskToken(token) {
   const last = t.slice(-4);
   return '****' + last;
 }
+
 // Role-based coloring for JSON bodies
 const roleColorMap = {
   system: chalk.gray,
@@ -21,11 +24,13 @@ const roleColorMap = {
   assistant: chalk.green,
   function: chalk.yellow
 };
+
 // Finish-reason coloring for response bodies
 const finishReasonColors = {
   stop: chalk.green,
   function_call: chalk.cyan
 };
+
 /**
  * Pretty-print JSON with OpenAI chat syntax highlighting.
  * @param {object} obj - parsed JSON object
@@ -88,9 +93,11 @@ function prettyPrintJson(obj, { isResponse = false } = {}) {
 }
 
 // Configuration
+// If you change the port, you must also change it in
+// the application you want to debug
 const PORT    = process.env.PORT || 8090;
-// Determine upstream API base URL (debug proxy or production)
-const baseUrl = await getApiBaseUrl();
+// Determine upstream API base URL (local server or production)
+const baseUrl = await getApiServerBaseUrl();
 
 /**
  * Pretty-print an HTTP request header and body (minimal skeleton)
@@ -259,8 +266,8 @@ const server = http.createServer((clientReq, clientRes) => {
 
 // Start listening
 server.listen(PORT, () => {
-  console.log(chalk.green(
-    `Proxy listening on http://localhost:${PORT} → ${baseUrl}`
-  ));
+  console.log(chalk.magenta(`Debugger proxy v1.0.0`));
+  console.log(chalk.magenta('→ Listening on  :'), `http://localhost:${PORT}`);
+  console.log(chalk.magenta('→ Forwarding to :'), baseUrl);
   // TODO: initialize CLI UI (Ink/React) here
 });
