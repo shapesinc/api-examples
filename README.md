@@ -3,9 +3,7 @@
 [![image](https://github.com/user-attachments/assets/e98592ca-3b1d-4709-93c6-7e6aa0dfb84a)](https://shapes.inc/slack)
 
 
-[Shapes](https://shapes.inc) are general purpose social agents. You can build for an [existing shape](https://shapes.inc/explore) from our catalogue of millions or [create](https://shapes.inc/create) your own. Shapes have rich personalities, love hanging out in groupchats, and short-term + long-term memory across platforms.
-
-The Shapes API enables developers to connect Shapes across social platforms, games, and other applications. Shapes can meet you anywhere, from your favorite social app or a new project. You can configure a Shape to use some of 50+ models we offer for free across text, image, and voice.
+[Shapes](https://shapes.inc) are general purpose social agents. You can build for an [existing shape](https://shapes.inc/explore) from our catalogue of millions or [create](https://shapes.inc/create) your own. Shapes have rich personalities, love hanging out in groupchats, and short-term + long-term memory across platforms. You can configure a Shape to use some of 50+ models we offer for free across text, image, and voice.
 
 ## Open Source Contributions
 Our API is designed with extensibility as a core principle. You can extend any Shape for tool calling, MCP, and more.
@@ -15,28 +13,16 @@ Star and contribute to this repository to receive free hosting for your integrat
 ## What is the Shapes API?
 Shapes API provides a programmatic way to integrate Shapes into any application or platform. It follows the OpenAI-compatible API standard, making it easy to implement with existing libraries and SDKs.
 
-To learn more about implementing Shapes in your app, check out our [examples repository](https://github.com/shapesinc/api).
+## Demos
+To get a sense of what’s possible, see what people have already built: 
 
-## Features
-
-Shapes API comes with many features that you won’t find in general APIs. Here's a quick overview:
-
-### Memories
-Shapes API supports cross-platform, long-term and short-term memory! Shapes will automatically reference relevant memories across sessions.
-
-### Image Generation
-You can generate images directly through Shapes API — just use the `!imagine` command or the relevant endpoint.
-
-### 50+ Models
-Access all trending LLMs including GPT-4.1, Claude Sonnet 3.7, Gemini 2.5 Pro, and more — all through a single API. Models can be configured in the AI Engine tab on the selected Shape's dashboard.
-
-### Voice Generation
-Shapes API supports voice messages. Configure your integration to send back audio replies using the built-in voice features.
-
-Check out the examples in the repo to learn how to use each of these features in your integration!
+- Omegle with Shapes https://omegle-ai.vercel.app by [@khawajapartners](https://github.com/zahidkhawaja)
+- Playing Chess with Shapes https://shapeschess.vercel.app by [@kiyosh11](https://github.com/kiyosh11)
+- Shapes on Telegram https://t.me/shapesinc by [@missParadoxical](https://github.com/missParadoxical)
+- Shapes on WhatsApp at +1 (424) 452-2786 by [@anushkmittal](https://github.com/anushkmittal)
 
 ## Getting Started
-You will need to generate an API Key. Every API Key is tied to a specific Shape. Get yours [here](https://shapes.inc/developer)
+You will need to generate an API Key. Get yours [here](https://shapes.inc/developer)
 
 <img width="807" alt="API Key Generation" src="https://github.com/user-attachments/assets/ead6f28a-300b-4dcf-a555-313b39656ad6" />
 
