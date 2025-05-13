@@ -71,4 +71,5 @@ Go to your flock/nest where the bot is active and try commands like:
 
 The bot should reply with either text or image URLs.
 
-
+## 8. Credits
+ Credits go to [q8j.](https://github.com/q8j-dev)
