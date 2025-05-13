@@ -3,8 +3,9 @@
 # Steam Shapes Bot
 
 this is a steam bot that uses the shapes.inc api to chat with users, analyze images/audio, and respond to commands via dms.
+[![image](https://i.imgur.com/qES28n4.png)](https://shapes.inc/slack)
 
-features
+## features
 
 steam chat integration with auto-login + persona status
 
