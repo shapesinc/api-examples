@@ -1,0 +1,22 @@
+{
+  "name": "shape-debug",
+  "version": "0.1.0",
+  "description": "CLI tool to proxy Shapes API traffic and provide a React/Ink-driven UI for live request/response logging and interactive slash commands.",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "shape-debug": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["proxy", "cli", "shapes", "debug"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
