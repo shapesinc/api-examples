@@ -10,30 +10,13 @@ app = Flask(__name__)
 SHAPES_API_KEY = os.getenv('SHAPES_API_KEY')
 SHAPES_API_URL = "https://api.shapes.inc/v1/chat/completions"
 
-# Interviewer personalities
-PERSONALITIES = {
-    "friendly": "Start with technical questions. Ask questions from arrays. You are a friendly and encouraging interviewer who provides constructive feedback. Ask only technical questions related to the category. Do not ask about the candidate's personal life. Keep the conversation strictly related to technical questions. Do NOT use parentheses in your responses. Start by asking a technical question.",
-    "strict": "You are a strict and detail-oriented interviewer who expects precise answers. Ask technical questions related to the category.",
-    "casual": "You are a casual and laid-back interviewer who makes the candidate feel comfortable. Ask technical questions related to the category."
-}
-
-# Interview categories
-CATEGORIES = {
-    "python": "Python programming language, focusing on core concepts, data structures, and best practices.",
-    "react": "React.js framework, focusing on components, hooks, state management, and modern practices.",
-    "c": "C programming language, focusing on memory management, pointers, and low-level concepts."
-}
-
 @app.route('/')
 def index():
-    return render_template('index.html', personalities=PERSONALITIES, categories=CATEGORIES)
+    return render_template('index.html')
 
 @app.route('/start_interview', methods=['POST'])
 def start_interview():
     try:
-        data = request.json
-        category = data.get('category', 'python')
-        personality = data.get('personality', 'carmack')
         reset_shape_memory()
         
         if not SHAPES_API_KEY:

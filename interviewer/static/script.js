@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleCodePanelBtn = document.getElementById('toggle-code-panel');
     const header = document.querySelector('header');
 
-    let currentPersonality = '';
     let codeMirrorEditor = null;
 
     // Start interview
@@ -24,10 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    category: 'python',
-                    personality: 'carmack'
-                })
+                body: JSON.stringify({})
             });
 
             if (!response.ok) {
@@ -104,9 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    code: code,
-                    category: 'python',
-                    personality: 'friendly'
+                    code: code
                 })
             });
             const data = await response.json();
@@ -157,9 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: message,
-                    category: 'python',
-                    personality: 'friendly'
+                    message: message
                 })
             });
 
