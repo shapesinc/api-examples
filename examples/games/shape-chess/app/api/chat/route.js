@@ -52,12 +52,17 @@ export async function POST(request) {
       // in a group.
     }
 
-    const resp = await shapes_client.chat.completions.create({
-      model: `shapesinc/${shape_username}`,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 150,
-      extra_headers: headers,
-    });
+    const resp = await shapes_client.chat.completions.create(
+      {
+        model: `shapesinc/${shape_username}`,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 150,
+      },
+      {
+        headers: headers,
+      }
+    );
+    
 
     const reply = resp.choices[0]?.message.content;
     if (!reply) {
