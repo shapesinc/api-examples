@@ -1,0 +1,351 @@
+:root {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --background-color: #111827;
+    --card-background: #1f2937;
+    --text-color: #f3f4f6;
+    --border-color: #374151;
+    --input-background: #374151;
+    --message-background: #2a3544;
+    --user-message-background: #3b82f6;
+    --code-panel-background: #1a1f2b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem 1.5rem;
+    background: var(--card-background);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.hidden {
+    display: none !important;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+header h1 {
+    font-size: 2.7rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+header p {
+    color: var(--text-color);
+    font-size: 1.15rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.setup-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+}
+
+.setup-card {
+    background-color: var(--card-background);
+    border-radius: 1.25rem;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 16px -2px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+}
+
+.setup-card h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+select {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 0.7rem;
+    font-size: 1.08rem;
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: border 0.2s;
+}
+
+select:focus {
+    border: 1.5px solid var(--primary-color);
+    outline: none;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.85rem 2.2rem;
+    border-radius: 0.7rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.18s, transform 0.18s;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+}
+
+.primary-button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.interview-section {
+    display: none;
+    background-color: var(--card-background);
+    border-radius: 1.25rem;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 16px -2px rgba(0,0,0,0.2);
+}
+
+.interview-section.active {
+    display: block;
+}
+
+.chat-layout {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    overflow: visible;
+    transition: all 0.3s ease;
+    gap: 1rem;
+}
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    background: var(--card-background);
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    padding: 1.2rem 1.2rem 0.5rem 1.2rem;
+    min-width: 0;
+    transition: all 0.3s ease;
+    max-width: 100%;
+    margin-right: 60px;
+}
+
+.code-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    background: var(--code-panel-background);
+    border-radius: 1.25rem 0 0 1.25rem;
+    box-shadow: -4px 0 16px -2px rgba(0,0,0,0.3);
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    transition: transform 0.3s ease;
+    transform: translateX(100%);
+    z-index: 1000;
+}
+
+.code-panel.visible {
+    transform: translateX(0);
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 0.7rem;
+    background: var(--message-background);
+}
+
+.message {
+    margin-bottom: 1.1rem;
+    padding: 1.1rem 1.2rem;
+    border-radius: 0.7rem;
+    max-width: 85%;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.interviewer-message {
+    background-color: var(--message-background);
+    margin-right: auto;
+    color: var(--text-color);
+}
+
+.user-message {
+    background-color: var(--user-message-background);
+    color: white;
+    margin-left: auto;
+}
+
+.input-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 0.5rem;
+}
+
+textarea {
+    flex-grow: 1;
+    padding: 0.95rem 1.1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 0.7rem;
+    font-size: 1.08rem;
+    resize: none;
+    font-family: 'Inter', 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    background: var(--input-background);
+    color: var(--text-color);
+    transition: border 0.2s;
+}
+
+textarea:focus {
+    border: 1.5px solid var(--primary-color);
+    outline: none;
+}
+
+#code-editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: calc(100% - 60px); /* Adjust for send button */
+}
+
+.CodeMirror {
+    flex: 1;
+    height: auto !important;
+    min-height: 200px;
+    font-size: 1.08rem;
+    border-radius: 0.7rem;
+    border: 1.5px solid var(--border-color);
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+}
+
+#send-code {
+    margin-top: 0.7rem;
+    width: 100%;
+    align-self: stretch;
+    font-size: 1.08rem;
+    padding: 0.85rem 0;
+}
+
+.toggle-panel-btn {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.18s ease;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.toggle-panel-btn .toggle-arrow {
+    transition: transform 0.3s ease;
+}
+
+.code-panel.visible ~ .toggle-panel-btn .toggle-arrow {
+    transform: rotate(180deg);
+}
+
+/* Initially hide the toggle button until interview starts */
+#toggle-code-panel {
+    display: none;
+}
+
+.toggle-panel-btn:hover {
+    background: var(--primary-hover);
+}
+
+@media (max-width: 900px) {
+    .chat-layout {
+        flex-direction: column;
+        gap: 1rem;
+        overflow: visible;
+    }
+    
+    .code-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 70vh;
+        transform: translateY(100%);
+        border-radius: 1.25rem 1.25rem 0 0;
+    }
+
+    .code-panel.visible {
+        transform: translateY(0);
+    }
+
+    .toggle-panel-btn {
+        position: fixed;
+        right: auto;
+        top: auto;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .toggle-panel-btn .toggle-arrow {
+        transform: rotate(-90deg);
+    }
+
+    .code-panel.visible ~ .toggle-panel-btn {
+        bottom: calc(70vh - 18px);
+    }
+
+    .code-panel.visible ~ .toggle-panel-btn .toggle-arrow {
+        transform: rotate(90deg);
+    }
+} 

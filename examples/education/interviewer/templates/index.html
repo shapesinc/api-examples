@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Interview Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tech Interview Simulator</h1>
+            <p>Practice your Python interview skills with our Shape, Carmack</p>
+        </header>
+
+        <div id="setup-section" class="setup-section">
+            <div class="setup-card">
+                <h2>Ready to start?</h2>
+                <button id="start-interview" class="primary-button">Start Interview</button>
+            </div>
+        </div>
+
+        <div id="interview-section" class="interview-section">
+            <div class="chat-layout">
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="input-container">
+                        <textarea id="user-input" placeholder="Type your answer here..." rows="3"></textarea>
+                        <button id="send-message" class="primary-button">Send</button>
+                    </div>
+                </div>
+                <button id="toggle-code-panel" class="toggle-panel-btn" aria-label="Toggle code editor">
+                    <svg class="toggle-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+                <div id="code-panel" class="code-panel">
+                    <div id="code-editor-container">
+                        <textarea id="code-input"></textarea>
+                        <button id="send-code" class="primary-button">Send Code</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+</body>
+</html> 
