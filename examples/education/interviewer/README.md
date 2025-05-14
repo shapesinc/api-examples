@@ -18,26 +18,6 @@ A web application that simulates Python technical interviews using the Shapes AP
 
 ## Setup
 
-### Automated Setup
-1. Clone the repository and navigate to the interviewer directory:
-   ```bash
-   cd examples/education/interviewer
-   ```
-
-2. Run the setup script for your platform:
-   - On macOS/Linux:
-     ```bash
-     chmod +x setup.sh
-     ./setup.sh
-     ```
-   - On Windows:
-     ```
-     setup.bat
-     ```
-
-3. Edit the `.env` file created by the setup script to add your Shapes API key.
-
-### Manual Setup
 1. Clone the repository and navigate to the interviewer directory:
    ```bash
    cd examples/education/interviewer
