@@ -13,11 +13,31 @@ A web application that simulates Python technical interviews using the Shapes AP
 ## Prerequisites
 
 - Python 3.8 or higher
-- Shapes API key
+- Shapes API key (get one from https://shapes.inc/developer)
 - pip (Python package manager)
 
 ## Setup
 
+### Automated Setup
+1. Clone the repository and navigate to the interviewer directory:
+   ```bash
+   cd examples/education/interviewer
+   ```
+
+2. Run the setup script for your platform:
+   - On macOS/Linux:
+     ```bash
+     chmod +x setup.sh
+     ./setup.sh
+     ```
+   - On Windows:
+     ```
+     setup.bat
+     ```
+
+3. Edit the `.env` file created by the setup script to add your Shapes API key.
+
+### Manual Setup
 1. Clone the repository and navigate to the interviewer directory:
    ```bash
    cd examples/education/interviewer
@@ -26,7 +46,12 @@ A web application that simulates Python technical interviews using the Shapes AP
 2. Create a virtual environment and activate it:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   
+   # On Windows
+   venv\Scripts\activate
    ```
 
 3. Install the required dependencies:
