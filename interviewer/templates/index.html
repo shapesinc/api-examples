@@ -12,27 +12,17 @@
     <div class="container">
         <header>
             <h1>Tech Interview Simulator</h1>
-            <p>Practice your technical interview skills with our AI interviewer</p>
+            <p>Practice your Python interview skills with our Shape, Carmack</p>
         </header>
 
         <div id="setup-section" class="setup-section">
             <div class="setup-card">
-                <h2>Interview Setup</h2>
-                <div class="form-group">
-                    <label for="category">Select Technology:</label>
-                    <select id="category" name="category">
-                        <option value="">Choose a technology...</option>
-                        <option value="python">Python</option>
-                        <option value="react">React</option>
-                        <option value="c">C</option>
-                    </select>
-                </div>
-
+                <h2>Ready to start?</h2>
                 <button id="start-interview" class="primary-button">Start Interview</button>
             </div>
         </div>
 
-        <div id="interview-section" class="interview-section hidden">
+        <div id="interview-section" class="interview-section">
             <div class="chat-layout">
                 <div class="chat-container">
                     <div id="chat-messages" class="chat-messages"></div>
@@ -41,8 +31,12 @@
                         <button id="send-message" class="primary-button">Send</button>
                     </div>
                 </div>
-                <div id="code-panel" class="code-panel hidden">
-                    <button id="toggle-code-panel" class="toggle-panel-btn">Show Code Editor</button>
+                <button id="toggle-code-panel" class="toggle-panel-btn" aria-label="Toggle code editor">
+                    <svg class="toggle-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+                <div id="code-panel" class="code-panel">
                     <div id="code-editor-container">
                         <textarea id="code-input"></textarea>
                         <button id="send-code" class="primary-button">Send Code</button>

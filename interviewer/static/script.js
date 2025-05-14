@@ -5,27 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendMessageBtn = document.getElementById('send-message');
     const userInput = document.getElementById('user-input');
     const chatMessages = document.getElementById('chat-messages');
-    const categorySelect = document.getElementById('category');
     const codeEditorContainer = document.getElementById('code-editor-container');
     const codeInput = document.getElementById('code-input');
     const sendCodeBtn = document.getElementById('send-code');
     const codePanel = document.getElementById('code-panel');
     const toggleCodePanelBtn = document.getElementById('toggle-code-panel');
+    const header = document.querySelector('header');
 
-    let currentCategory = '';
     let currentPersonality = '';
     let codeMirrorEditor = null;
 
     // Start interview
     startInterviewBtn.addEventListener('click', async () => {
-        currentCategory = categorySelect.value;
-        currentPersonality = 'friendly';
-
-        if (!currentCategory) {
-            alert('Please select a technology');
-            return;
-        }
-
+        console.log('Starting interview...');
         try {
             const response = await fetch('/start_interview', {
                 method: 'POST',
@@ -33,10 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    category: currentCategory,
-                    personality: 'friendly'
+                    category: 'python',
+                    personality: 'carmack'
                 })
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
             
@@ -44,16 +40,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error);
             }
 
-            // Show interview section and hide setup
+            // Update UI for interview mode
             setupSection.classList.add('hidden');
+            header.classList.add('hidden');
             interviewSection.classList.remove('hidden');
+            interviewSection.classList.add('active');
 
-            // Ensure editor is shown if Python
-            ensureEditorOnInterviewStart();
-
+            // Initialize code editor and show toggle button
+            initializeCodeMirror();
+            toggleCodePanelBtn.style.display = 'flex';
+            
             // Add interviewer's first message
             addMessage(data.choices[0].message.content, 'interviewer');
         } catch (error) {
+            console.error('Error starting interview:', error);
             alert('Error starting interview: ' + error.message);
         }
     });
@@ -84,28 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Helper to show/hide code editor based on category
-    function showOrHideCodeEditor() {
-        if (categorySelect.value === 'python') {
-            codePanel.classList.remove('hidden');
-            toggleCodePanelBtn.textContent = 'Hide Code Editor';
-            initializeCodeMirror();
-            setTimeout(() => codeMirrorEditor && codeMirrorEditor.refresh(), 100);
-        } else {
-            codePanel.classList.add('hidden');
-        }
+    // Initialize code editor on page load
+    initializeCodeMirror();
+
+    // Set initial state of the toggle button
+    if (codePanel.classList.contains('visible')) {
+        document.querySelector('.toggle-arrow').style.transform = 'rotate(180deg)';
     }
-
-    // On category change
-    categorySelect.addEventListener('change', showOrHideCodeEditor);
-
-    // On page load, or after interview starts, ensure editor is shown if Python is selected
-    function ensureEditorOnInterviewStart() {
-        showOrHideCodeEditor();
-    }
-
-    // Call on page load in case Python is pre-selected
-    showOrHideCodeEditor();
 
     sendCodeBtn.addEventListener('click', async () => {
         const code = codeMirrorEditor ? codeMirrorEditor.getValue().trim() : '';
@@ -120,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     code: code,
-                    category: categorySelect.value,
+                    category: 'python',
                     personality: 'friendly'
                 })
             });
@@ -134,16 +119,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    toggleCodePanelBtn.addEventListener('click', () => {
-        if (codePanel.classList.contains('hidden')) {
-            codePanel.classList.remove('hidden');
-            toggleCodePanelBtn.textContent = 'Hide Code Editor';
-            initializeCodeMirror();
-            setTimeout(() => codeMirrorEditor && codeMirrorEditor.refresh(), 100);
+    // Toggle code panel
+    toggleCodePanelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isVisible = codePanel.classList.contains('visible');
+        
+        if (!isVisible) {
+            // Show the panel
+            codePanel.classList.add('visible');
+            
+            // Give time for the panel to appear before refreshing CodeMirror
+            setTimeout(() => {
+                if (codeMirrorEditor) {
+                    codeMirrorEditor.refresh();
+                }
+            }, 300);
         } else {
-            codePanel.classList.add('hidden');
-            toggleCodePanelBtn.textContent = 'Show Code Editor';
+            // Hide the panel
+            codePanel.classList.remove('visible');
         }
+        
+        return false;
     });
 
     async function sendMessage() {
@@ -162,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     message: message,
-                    category: currentCategory,
+                    category: 'python',
                     personality: 'friendly'
                 })
             });

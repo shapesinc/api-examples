@@ -30,28 +30,26 @@ def index():
 
 @app.route('/start_interview', methods=['POST'])
 def start_interview():
-    data = request.json
-    category = data.get('category')
-    personality = 'friendly'
-    
-    if not category:
-        return jsonify({"error": "Missing category"}), 400
-    
-    # Reset memory before starting the interview
-    reset_shape_memory()
-    
-    system_prompt = f"""
-    You are a professional technical interviewer with a {personality} style.
-    Conduct the interview in a systematic manner:
-    - Greet the candidate.
-    - Ask one {category} technical question at a time.
-    - Wait for the candidate's answer before proceeding.
-    - After each answer, provide brief feedback and ask the next question.
-    - Do not end the interview unless the user says 'end interview'.
-    - Remain professional and focused on the interview at all times.
-    """
-    
     try:
+        data = request.json
+        category = data.get('category', 'python')
+        personality = data.get('personality', 'carmack')
+        reset_shape_memory()
+        
+        if not SHAPES_API_KEY:
+            return jsonify({"error": "Shapes API key not configured"}), 500
+        
+        system_prompt = f"""You are Carmack, a Python technical interviewer. You have the following traits:
+        - Expert in Python and computer science
+        - Direct and technically precise in your communication
+        - Focus on practical problem-solving and code efficiency
+        - Ask one question at a time and wait for the response
+        - Start with fundamental concepts before moving to complex topics
+        - Provide constructive feedback on code submissions
+        - Keep responses concise and focused
+
+        Begin the interview by introducing yourself briefly and asking your first technical question."""
+        
         response = requests.post(
             SHAPES_API_URL,
             headers={
@@ -67,69 +65,27 @@ def start_interview():
             }
         )
         
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": "Failed to get response from Shapes API"}), 500
+        if response.status_code != 200:
+            return jsonify({"error": f"Shapes API error: {response.text}"}), response.status_code
+            
+        return jsonify(response.json())
             
     except Exception as e:
+        print(f"Error in start_interview: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/continue_interview', methods=['POST'])
 def continue_interview():
-    data = request.json
-    user_message = data.get('message')
-    category = data.get('category')
-    personality = 'friendly'
-    
-    if not all([user_message, category]):
-        return jsonify({"error": "Missing required fields"}), 400
-    
-    system_prompt = f"""
-    {PERSONALITIES[personality]}
-    You are conducting a technical interview about {CATEGORIES[category]}.
-    Continue the interview based on the candidate's response.
-    Provide appropriate feedback and ask follow-up questions when necessary.
-    """
-    
     try:
-        response = requests.post(
-            SHAPES_API_URL,
-            headers={
-                "Authorization": f"Bearer {SHAPES_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "shapesinc/interviewer",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ]
-            }
-        )
+        data = request.json
+        message = data.get('message')
         
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": "Failed to get response from Shapes API"}), 500
+        if not message:
+            return jsonify({"error": "Missing message"}), 400
             
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/send_code', methods=['POST'])
-def send_code():
-    data = request.json
-    code = data.get('code')
-    category = data.get('category')
-    personality = 'friendly'
-
-    if not all([code, category]):
-        return jsonify({"error": "Missing required fields"}), 400
-
-    # Compose a message for the Shape to review the code
-    user_message = f"Please review the following Python code and provide feedback as an interviewer.\n\n{code}"
-
-    try:
+        if not SHAPES_API_KEY:
+            return jsonify({"error": "Shapes API key not configured"}), 500
+        
         response = requests.post(
             SHAPES_API_URL,
             headers={
@@ -139,15 +95,60 @@ def send_code():
             json={
                 "model": "shapesinc/carmack",
                 "messages": [
-                    {"role": "user", "content": user_message}
+                    {"role": "user", "content": message}
                 ]
             }
         )
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": "Failed to get response from Shapes API"}), 500
+        
+        if response.status_code != 200:
+            return jsonify({"error": f"Shapes API error: {response.text}"}), response.status_code
+            
+        return jsonify(response.json())
+        
     except Exception as e:
+        print(f"Error in continue_interview: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/send_code', methods=['POST'])
+def send_code():
+    try:
+        data = request.json
+        code = data.get('code')
+        
+        if not code:
+            return jsonify({"error": "Missing code"}), 400
+            
+        if not SHAPES_API_KEY:
+            return jsonify({"error": "Shapes API key not configured"}), 500
+        
+        system_prompt = """You are Carmack, a Python technical interviewer. Review the submitted code and provide feedback on:
+        - Code correctness and efficiency
+        - Python best practices and conventions
+        - Potential improvements or alternative approaches
+        Keep your feedback concise and constructive."""
+        
+        response = requests.post(
+            SHAPES_API_URL,
+            headers={
+                "Authorization": f"Bearer {SHAPES_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "shapesinc/carmack",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Please review this code:\n\n```python\n{code}\n```"}
+                ]
+            }
+        )
+        
+        if response.status_code != 200:
+            return jsonify({"error": f"Shapes API error: {response.text}"}), response.status_code
+            
+        return jsonify(response.json())
+        
+    except Exception as e:
+        print(f"Error in send_code: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 def reset_shape_memory():
@@ -160,7 +161,7 @@ def reset_shape_memory():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "shapesinc/interviewer",
+                "model": "shapesinc/carmack",
                 "messages": [
                     {"role": "user", "content": cmd}
                 ]
