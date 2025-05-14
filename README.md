@@ -220,7 +220,6 @@ We are shipping new features to the Shapes API every day. Next on our list is:
 
 | Feature | Details |
 |------------|---------|
-| Authorize with Shapes, Inc | Authenticate users via a shapes inc account |
 | Free Will | Proactively take actions |
 | Messaging first | Shapes can't talk first...yet |
 
