@@ -53,7 +53,6 @@ export async function POST(req) {
       body: JSON.stringify({
         model: `shapesinc/${shapeUsername}`,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 50,
       }),
     });
 
