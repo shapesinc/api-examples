@@ -12,3 +12,4 @@ idna==3.6
 urllib3==2.2.1
 blinker==1.7.0
 openai==1.76.0 
+gunicorn
