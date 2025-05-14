@@ -1,0 +1,6 @@
+openai
+flask
+fastapi
+httpx
+uvicorn
+python-dotenv
