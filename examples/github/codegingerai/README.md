@@ -4,6 +4,11 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
 
 ## Demo Video
 [Loom Link](https://www.loom.com/share/58829c0876c546cb834c40981507de6d?sid=d91bdc1c-7428-4bee-b762-7c4fae88036b)
+## Screenshots
+![pull_request.opened triggered](https://github.com/giteshsarvaiya/api/blob/main/examples/github/codegingerai/assets/Screenshot%202025-05-14%20190119.png)
+*Figure 1: pull_request.opened triggered*
+![issue_comment.created triggered](https://github.com/giteshsarvaiya/api/blob/main/examples/github/codegingerai/assets/Screenshot%202025-05-14%20143444.png)
+*Figure 2: issue_comment.created triggered*
 
 ## Features ✨
 
