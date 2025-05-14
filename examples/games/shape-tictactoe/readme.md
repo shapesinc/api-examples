@@ -5,6 +5,8 @@ A modern Tic-Tac-Toe game built with Next.js, featuring an AI opponent powered b
 
 ![Shape Games](https://i.imgur.com/DziE7ZN.png)
 
+play here
+https://tic-tac-toe-shapes.vercel.app
 ## Features
 - **Gameplay**: Play as X against an Shape (O) on a 3x3 grid.
 - **Difficulty Levels**:
