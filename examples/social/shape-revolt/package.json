@@ -22,7 +22,7 @@
         "type": "git",
         "url": "git+https://github.com/shapesinc/api.git"
     },
-    "type": "module",
+    "type": "commonjs",
     "scripts": {
         "start": "node index.js"
     },

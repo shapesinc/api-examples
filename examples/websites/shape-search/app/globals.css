@@ -1,0 +1,844 @@
+:root {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Light Theme */
+  --color-primary-text-light: #202124;
+  --color-secondary-text-light: #4d5156;
+  --color-tertiary-text-light: #70757a;
+  --color-link-light: #1a0dab;
+  --color-link-visited-light: #609;
+  --color-background-light: #ffffff;
+  --color-surface-light: #ffffff; /* For cards/sections like AI Summary */
+  --color-border-light: #dfe1e5;
+  --color-input-background-light: #f1f3f4; /* Slightly off-white for input */
+  --color-input-border-light: #dfe1e5; /* Initial border */
+  --color-input-focus-border-light: #4285f4; /* Google Blue */
+  --color-button-primary-background-light: #f8f9fa; /* Example, though search button is transparent */
+  --color-button-primary-text-light: #3c4043; /* Example */
+  --color-button-primary-border-light: #f8f9fa; /* Example */
+  --color-button-primary-hover-border-light: #dadce0; /* Example */
+  --color-ai-summary-background-light: #e8f0fe; /* Very light blue for AI - Adjusted for distinctiveness */
+  --color-ai-summary-border-light: #cce0ff; /* Subtle border for AI box */
+  --color-error-background-light: #fce8e6;
+  --color-error-text-light: #d93025;
+  --color-loading-text-light: #1a73e8;
+  --color-skeleton-light: #e0e0e0; /* Light grey for skeleton blocks */
+  --color-skeleton-darker-light: #bdbdbd; /* Slightly darker grey for skeleton headings */
+
+
+  /* Dark Theme */
+  --color-primary-text-dark: #e8eaed;
+  --color-secondary-text-dark: #bdc1c6;
+  --color-tertiary-text-dark: #969ba1;
+  --color-link-dark: #8ab4f8; /* Lighter blue */
+  --color-link-visited-dark: #c58af9;
+  --color-background-dark: #202124;
+  --color-surface-dark: #292a2d; /* Darker grey for cards/sections */
+  --color-border-dark: #3c4043;
+  --color-input-background-dark: #303134; /* Darker grey for input */
+  --color-input-border-dark: #5f6368;
+  --color-input-focus-border-dark: #8ab4f8;
+  --color-button-primary-background-dark: #303134; /* Example */
+  --color-button-primary-text-dark: #e8eaed; /* Example */
+  --color-button-primary-border-dark: #303134; /* Example */
+  --color-button-primary-hover-border-dark: #5f6368; /* Example */
+  --color-ai-summary-background-dark: #303134; /* Darker grey for AI */
+  --color-ai-summary-border-dark: #3c4043; /* Subtle border for AI box */
+  --color-error-background-dark: #5c2e2e;
+  --color-error-text-dark: #f28b82;
+  --color-loading-text-dark: #8ab4f8;
+   --color-skeleton-dark: #3c4043; /* Dark grey for skeleton */
+   --color-skeleton-darker-dark: #5f6368; /* Slightly darker grey for details */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0; /* Ensure default margins are reset */
+  padding: 0; /* Ensure default padding are reset */
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background-light);
+  color: var(--color-primary-text-light);
+  line-height: 1.6;
+  transition: background-color 0.5s ease, color 0.5s ease; /* Smooth theme transition */
+  padding: 16px; /* Global padding around the content */
+  min-height: 100vh; /* Ensure body takes at least viewport height */
+  display: flex; /* Use flex for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: flex-start; /* Align content to the top */
+}
+
+.dark body {
+  background-color: var(--color-background-dark);
+  color: var(--color-primary-text-dark);
+}
+
+.container {
+  width: 100%; /* Take full width up to max-width */
+  max-width: 700px; /* Max width of the main content area */
+  margin: 0 auto; /* Center the container */
+  padding: 0; /* Container itself doesn't need padding, children will */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center block-level children */
+}
+
+.header {
+  width: 100%; /* Header takes full container width */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px; /* Space below the header */
+  padding: 0 8px 16px 8px; /* Internal padding, and padding for bottom border */
+  border-bottom: 1px solid var(--color-border-light);
+}
+.dark .header {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.app-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--color-primary-text-light);
+  transition: color 0.3s ease;
+}
+.dark .app-title {
+  color: var(--color-primary-text-dark);
+}
+
+.theme-toggle {
+  background: none;
+  border: none; /* Remove default border */
+  color: var(--color-secondary-text-light);
+  padding: 8px; /* Square padding for a circle */
+  border-radius: 50%; /* Make it round */
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  display: flex; /* Center icon */
+  align-items: center;
+  justify-content: center;
+}
+.dark .theme-toggle {
+  color: var(--color-secondary-text-dark);
+}
+.theme-toggle:hover {
+  background-color: rgba(var(--color-secondary-text-light), 0.1); /* Subtle hover effect */
+}
+.dark .theme-toggle:hover {
+  background-color: rgba(var(--color-secondary-text-dark), 0.1);
+}
+.theme-toggle .icon {
+    width: 20px; /* Icon size */
+    height: 20px;
+    stroke: currentColor; /* Use the button's text color for the icon */
+}
+
+
+.search-form {
+    width: 100%;
+    margin-bottom: 40px; /* Space below the search bar */
+}
+
+.search-bar-wrapper {
+  display: flex;
+  width: 100%; /* Takes full width up to max-width */
+  max-width: 600px; /* Max width for the search bar */
+  margin: 0 auto; /* Center the search bar */
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28); /* Google-like shadow */
+  border-radius: 24px; /* Pill shape */
+  border: 1px solid var(--color-input-border-light); /* Initial subtle border */
+  overflow: hidden; /* Ensure children respect border-radius */
+  background-color: var(--color-surface-light); /* Background matches surface */
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+.dark .search-bar-wrapper {
+  border-color: var(--color-input-border-dark);
+  background-color: var(--color-surface-dark);
+}
+.search-bar-wrapper:focus-within { /* Style when input inside is focused */
+  border-color: var(--color-input-focus-border-light);
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28), 0 0 0 1px var(--color-input-focus-border-light); /* Add blue ring */
+}
+.dark .search-bar-wrapper:focus-within {
+  border-color: var(--color-input-focus-border-dark);
+  box-shadow: 0 1px 6px rgba(0,0,0, 0.28), 0 0 0 1px var(--color-input-focus-border-dark);
+}
+
+.search-input {
+  flex-grow: 1; /* Takes up available space */
+  padding: 12px 20px;
+  font-size: 1rem;
+  border: none; /* Remove default input border */
+  outline: none; /* Remove default focus outline */
+  background: none; /* Inherit background from wrapper */
+  color: var(--color-primary-text-light);
+  /* Border-radius handled by parent wrapper */
+}
+.dark .search-input {
+  color: var(--color-primary-text-dark);
+}
+.search-input::placeholder {
+    color: var(--color-tertiary-text-light);
+    opacity: 0.8;
+}
+.dark .search-input::placeholder {
+    color: var(--color-tertiary-text-dark);
+}
+
+.search-button {
+  padding: 12px 16px; /* Adjust padding */
+  font-size: 1rem;
+  background: none; /* Inherit background from wrapper */
+  color: var(--color-link-light); /* Use a color that stands out */
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex; /* Center content (icon/spinner) */
+  align-items: center;
+  justify-content: center;
+  /* Border-radius handled by parent wrapper */
+}
+.dark .search-button {
+  color: var(--color-link-dark);
+}
+.search-button:hover:not(:disabled) {
+  color: var(--color-link-visited-light); /* Subtle color change on hover */
+}
+.dark .search-button:hover:not(:disabled) {
+  color: var(--color-link-visited-dark);
+}
+.search-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.search-button .icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor; /* Use button's text color for icon */
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor; /* Border color from parent text color */
+  border-top-color: transparent; /* Makes it look like it's spinning */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px; /* Space if next to text */
+  flex-shrink: 0; /* Prevent shrinking in flex container */
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Info Messages (Loading/Error) */
+.info-message {
+  width: 100%; /* Take full width up to max-width */
+  max-width: 600px; /* Match search bar width */
+  margin: 0 auto 20px auto; /* Center and add bottom margin */
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Space between icon/spinner and text */
+}
+
+.loading-message {
+  background-color: rgba(var(--color-loading-text-light), 0.1); /* Light transparent blue */
+  color: var(--color-loading-text-light);
+  border: 1px solid rgba(var(--color-loading-text-light), 0.2);
+}
+.dark .loading-message {
+   background-color: rgba(var(--color-loading-text-dark), 0.1);
+   color: var(--color-loading-text-dark);
+   border-color: rgba(var(--color-loading-text-dark), 0.2);
+}
+
+.error-message {
+  background-color: var(--color-error-background-light);
+  color: var(--color-error-text-light);
+  border: 1px solid rgba(var(--color-error-text-light), 0.2);
+}
+.dark .error-message {
+  background-color: var(--color-error-background-dark);
+  color: var(--color-error-text-dark);
+   border-color: rgba(var(--color-error-text-dark), 0.2);
+}
+.error-icon {
+    font-weight: bold;
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+
+
+/* Skeleton Placeholder Styles */
+.skeleton-container {
+    width: 100%;
+    max-width: 700px; /* Match results width */
+    margin-top: 24px; /* Space below search/messages */
+    /* animation handled by framer-motion */
+     padding: 0 8px; /* Add horizontal padding */
+}
+
+.skeleton-ai-summary {
+    margin-bottom: 32px; /* Space between AI skeleton and links skeleton */
+    background-color: var(--color-ai-summary-background-light); /* Match AI summary background */
+    border: 1px solid var(--color-ai-summary-border-light); /* Match AI summary border */
+    border-radius: 8px;
+    padding: 20px; /* Padding inside the AI skeleton box */
+}
+.dark .skeleton-ai-summary {
+    background-color: var(--color-ai-summary-background-dark);
+    border-color: var(--color-ai-summary-border-dark);
+}
+
+.skeleton-related-links {
+    margin-bottom: 32px; /* Space below links skeleton (before footer) */
+    /* padding: 0 8px; Handled by skeleton-container */
+}
+
+
+.skeleton-heading {
+    height: 20px; /* Height like h2 */
+    width: 150px; /* Width like a heading */
+    background-color: var(--color-skeleton-darker-light);
+    margin-bottom: 25px; /* Increased space below heading */
+    border-radius: 4px;
+    opacity: 0.7; /* Subtle look */
+    animation: pulse 1.5s infinite ease-in-out; /* Add a subtle pulsing animation */
+}
+.dark .skeleton-heading {
+    background-color: var(--color-skeleton-darker-dark);
+}
+/* Adjust skeleton heading inside AI skeleton box */
+.skeleton-ai-summary .skeleton-heading {
+    margin-bottom: 16px; /* Match real AI heading margin */
+}
+
+
+.skeleton-item { /* For AI Summary items */
+    margin-bottom: 16px; /* Space between AI skeleton items */
+    /* No extra padding needed here, parent has padding */
+}
+.skeleton-item:last-child {
+     margin-bottom: 0;
+}
+
+.skeleton-link-item { /* For Related Link items */
+    margin-bottom: 24px; /* Increased space between individual link skeleton items */
+    padding: 8px 0; /* Add padding similar to real links */
+}
+.skeleton-link-item:last-child {
+    margin-bottom: 0;
+}
+
+
+.skeleton-title {
+    height: 18px; /* Height like h3 */
+    width: 80%; /* Variable width */
+    background-color: var(--color-skeleton-light);
+    margin-bottom: 8px; /* Increased space below title placeholder */
+    border-radius: 4px;
+    opacity: 0.8;
+     animation: pulse 1.5s infinite ease-in-out;
+}
+.dark .skeleton-title {
+    background-color: var(--color-skeleton-dark);
+}
+
+.skeleton-description {
+     height: 14px; /* Height like paragraph text */
+     width: 95%; /* Mostly full width */
+     background-color: var(--color-skeleton-light);
+     margin-bottom: 6px; /* Increased space below description lines */
+     border-radius: 4px;
+     opacity: 0.8;
+      animation: pulse 1.5s infinite ease-in-out;
+}
+.skeleton-description.short {
+     width: 90%; /* Shorter line */
+     margin-bottom: 12px; /* Increased space after the last line of description */
+}
+.dark .skeleton-description {
+     background-color: var(--color-skeleton-dark);
+}
+
+
+.skeleton-source {
+     height: 12px; /* Height like URL text */
+     width: 40%; /* Shorter width */
+     background-color: var(--color-skeleton-light);
+     margin-top: 6px; /* Increased space above source placeholder */
+     border-radius: 4px;
+     opacity: 0.6;
+      animation: pulse 1.5s infinite ease-in-out;
+}
+.dark .skeleton-source {
+     background-color: var(--color-skeleton-dark);
+}
+
+/* Subtle pulsing animation for skeleton blocks */
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+
+/* Real Results Styles */
+
+/* AI Summary Section - Rounded Box Styling */
+.ai-summary-container {
+  background-color: var(--color-ai-summary-background-light);
+  border: 1px solid var(--color-ai-summary-border-light); /* Distinct border for the box */
+  border-radius: 8px; /* Rounded corners */
+  padding: 20px; /* Internal padding */
+  margin-bottom: 32px; /* Space below the section */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08); /* Subtle shadow */
+  width: 100%; /* Ensure it takes full width */
+  max-width: 700px; /* Match container width */
+  /* animation handled by framer-motion */
+}
+.dark .ai-summary-container {
+  background-color: var(--color-ai-summary-background-dark);
+  border-color: var(--color-ai-summary-border-dark);
+}
+
+/* results-container now mainly styles the related links section */
+.results-container {
+   width: 100%;
+   max-width: 700px;
+   margin-top: 24px; /* Space above related links, below AI summary */
+   /* animation handled by framer-motion */
+    padding: 0 8px; /* Add horizontal padding to align list items */
+}
+
+
+.section-heading { /* Shared style for H2 headings */
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-primary-text-light);
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.dark .section-heading {
+  color: var(--color-primary-text-dark);
+  border-bottom-color: var(--color-border-dark);
+}
+
+/* Specific override for AI Summary heading - Remove border/padding if inside the box */
+.ai-summary-container .section-heading.ai-summary-heading {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 16px; /* Keep space below AI heading */
+}
+
+
+.ai-summary-item { /* Styles for individual items within AI Summary */
+  margin-bottom: 16px;
+  /* Animation handled by framer-motion on the parent section */
+}
+.ai-summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.item-title { /* Shared style for titles (AI or Link) */
+  font-size: 1.25rem;
+  font-weight: normal;
+  color: var(--color-primary-text-light); /* Default color */
+  margin-top: 0;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.dark .item-title {
+  color: var(--color-primary-text-dark);
+}
+
+.ai-summary-title-link { /* Specific style if AI title is a link */
+  text-decoration: none;
+  display: inline-block;
+}
+.ai-summary-title-link .item-title {
+  color: var(--color-link-light); /* Use link color if it's a link */
+}
+.dark .ai-summary-title-link .item-title {
+  color: var(--color-link-dark);
+}
+.ai-summary-title-link:hover .item-title {
+  text-decoration: underline;
+}
+
+.item-description { /* Shared style for descriptions/snippets */
+  font-size: 0.9rem;
+  color: var(--color-secondary-text-light);
+  line-height: 1.57;
+  margin-bottom: 8px;
+}
+.dark .item-description {
+  color: var(--color-secondary-text-dark);
+}
+
+.item-source-link { /* Shared style for URL/source text */
+  font-size: 0.8rem;
+  color: var(--color-tertiary-text-light);
+  text-decoration: none;
+  display: inline-block; /* Allows margins/padding */
+  margin-top: 4px;
+  line-height: 1.3;
+   white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis */
+  max-width: 100%; /* Ensure ellipsis works */
+}
+.dark .item-source-link {
+  color: var(--color-tertiary-text-dark);
+}
+.item-source-link:hover {
+  text-decoration: underline;
+}
+
+
+/* Related Links Section - List Styling */
+.related-links-container {
+  /* margin-top: 24px; - Handled by .results-container */
+  padding: 0 8px; /* Add horizontal padding like the skeleton */
+}
+
+.related-link-item { /* Styles for individual link items */
+  margin-bottom: 20px; /* Space between link items */
+  padding: 8px 0; /* Add vertical padding */
+  /* Animation handled by framer-motion on the parent section */
+}
+.related-link-item:last-child {
+    margin-bottom: 0;
+}
+
+.related-link-item a { /* Anchor tag wrapping URL and Title */
+  text-decoration: none;
+  display: block; /* Makes the whole area clickable */
+}
+
+/* .item-source-link and .item-description are shared styles */
+
+.link-title { /* Specific override for search result titles */
+  /* Inherits from .item-title but uses link color */
+  color: var(--color-link-light);
+}
+.dark .link-title {
+  color: var(--color-link-dark);
+}
+
+.related-link-item a:hover .link-title {
+  text-decoration: underline;
+}
+/* Visited link styling */
+.related-link-item a:visited .link-title {
+    color: var(--color-link-visited-light);
+}
+.dark .related-link-item a:visited .link-title {
+    color: var(--color-link-visited-dark);
+}
+
+
+/* Footer Styles */
+.app-footer {
+    width: 100%; /* Take full width up to max-width */
+    max-width: 700px; /* Match container width */
+    margin-top: 60px; /* Space above footer */
+    padding: 20px 8px 10px 8px; /* Padding inside the footer */
+    border-top: 1px solid var(--color-border-light);
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--color-tertiary-text-light);
+    transition: color 0.3s ease, border-top-color 0.3s ease;
+}
+.dark .app-footer {
+    border-top-color: var(--color-border-dark);
+    color: var(--color-tertiary-text-dark);
+}
+
+.app-footer p {
+    margin-bottom: 8px;
+}
+.app-footer p:last-child {
+    margin-bottom: 0;
+}
+
+.app-footer a {
+    color: var(--color-secondary-text-light); /* Use a subtle link color */
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.dark .app-footer a {
+    color: var(--color-secondary-text-dark);
+}
+.app-footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) { /* Medium screens */
+    body {
+        padding: 12px; /* Adjusted overall padding */
+    }
+    .container {
+        padding: 0 4px; /* Reduced horizontal padding */
+    }
+     .header {
+        margin-bottom: 30px; /* Less space below header */
+        padding: 0 4px 12px 4px; /* Adjusted header padding */
+    }
+    .search-form {
+         margin-bottom: 30px; /* Less space below search form */
+    }
+    .search-bar-wrapper {
+        max-width: 100%; /* Allow search bar to take full width */
+        margin: 0 auto; /* Ensure it stays centered */
+    }
+    .info-message {
+         max-width: 100%; /* Allow messages to take full width */
+         padding: 10px 16px;
+         font-size: 0.85rem;
+         margin-bottom: 16px; /* Less space below messages */
+    }
+
+    /* Sections and Skeleton Containers */
+    .ai-summary-container,
+    .results-container, /* Wraps Related Links */
+    .skeleton-container {
+         max-width: 100%; /* Take full width */
+         /* Horizontal padding is handled by their specific rules below */
+         margin-top: 20px; /* Slightly less space above sections */
+         margin-bottom: 24px; /* Slightly less space between sections */
+    }
+
+    .ai-summary-container {
+        padding: 16px; /* Reduced padding inside AI summary box */
+    }
+
+     .related-links-container { /* Specific for related links list */
+        padding: 0 8px; /* Consistent horizontal padding */
+     }
+
+    .skeleton-ai-summary {
+        padding: 16px; /* Reduced padding inside skeleton AI box */
+        margin-bottom: 24px; /* Space below skeleton AI */
+    }
+    .skeleton-related-links {
+        margin-bottom: 24px; /* Space below skeleton links */
+    }
+
+
+     .section-heading {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+    }
+    /* Adjust responsive margin for AI heading inside the box */
+     .ai-summary-container .section-heading.ai-summary-heading {
+         margin-bottom: 12px; /* Keep space below AI heading */
+    }
+
+
+    .item-title, .link-title {
+        font-size: 1.1rem; /* 18px */
+    }
+    .item-description, .item-source-link {
+        font-size: 0.85rem; /* ~13.6px */
+    }
+     .skeleton-heading {
+        height: 18px;
+        width: 120px;
+        margin-bottom: 20px;
+     }
+     /* Adjust responsive margin for skeleton heading inside AI skeleton box */
+     .skeleton-ai-summary .skeleton-heading {
+        margin-bottom: 12px;
+     }
+     .skeleton-title {
+        height: 16px;
+        width: 75%;
+         margin-bottom: 6px;
+     }
+     .skeleton-description {
+        height: 13px;
+        width: 98%;
+         margin-bottom: 5px;
+     }
+     .skeleton-description.short {
+         width: 93%;
+         margin-bottom: 10px;
+     }
+     .skeleton-source {
+        height: 11px;
+        width: 35%;
+         margin-top: 5px;
+     }
+
+
+    .app-footer {
+        max-width: 100%;
+        margin-top: 40px; /* Less space above footer */
+        padding: 16px 8px 8px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) { /* Small screens */
+    body {
+        padding: 8px;
+    }
+     .header {
+        margin-bottom: 20px;
+        padding: 0 0px 10px 0px; /* Minimal padding in header */
+    }
+     .app-title {
+        font-size: 1.4rem;
+    }
+     .theme-toggle {
+        padding: 6px;
+     }
+     .theme-toggle .icon {
+         width: 18px;
+         height: 18px;
+     }
+
+    .search-form {
+         margin-bottom: 20px;
+    }
+    .search-input {
+        padding: 10px 15px;
+        font-size: 0.95rem;
+    }
+    .search-button {
+         padding: 10px 12px;
+    }
+     .search-button .icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .info-message {
+         padding: 8px 12px;
+         font-size: 0.8rem;
+         margin-bottom: 12px;
+    }
+    .loading-spinner {
+        width: 14px;
+        height: 14px;
+    }
+     .error-icon {
+        font-size: 1em;
+     }
+
+     /* Sections and Skeleton Containers */
+    .ai-summary-container,
+    .results-container,
+     .skeleton-container {
+        margin-top: 16px;
+        margin-bottom: 20px;
+    }
+
+     .ai-summary-container {
+        padding: 12px; /* Further reduced padding inside AI summary box */
+     }
+      .related-links-container {
+        padding: 0 4px; /* Further reduced horizontal padding */
+     }
+
+     .skeleton-ai-summary {
+        padding: 12px; /* Further reduced padding inside skeleton AI box */
+        margin-bottom: 20px;
+     }
+      .skeleton-related-links {
+        margin-bottom: 20px;
+     }
+
+    .section-heading {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+    }
+     /* Adjust responsive margin for AI heading inside the box */
+    .ai-summary-container .section-heading.ai-summary-heading {
+         margin-bottom: 10px; /* Keep space below AI heading */
+    }
+
+    .ai-summary-item {
+        margin-bottom: 12px; /* Less space between AI items */
+    }
+
+    .related-link-item {
+        margin-bottom: 16px; /* Less space between link items */
+        padding: 6px 0; /* Reduced vertical padding */
+    }
+
+
+    .item-title, .link-title {
+        font-size: 1rem; /* 16px */
+        margin-bottom: 3px;
+    }
+    .item-description, .item-source-link {
+        font-size: 0.75rem; /* 12px */
+        line-height: 1.5;
+    }
+    .item-description {
+        margin-bottom: 6px;
+    }
+    .item-source-link {
+        margin-top: 3px;
+    }
+
+     .skeleton-heading {
+        height: 16px;
+        width: 100px;
+        margin-bottom: 16px;
+     }
+      /* Adjust responsive margin for skeleton heading inside AI skeleton box */
+     .skeleton-ai-summary .skeleton-heading {
+        margin-bottom: 10px;
+     }
+      .skeleton-title {
+        height: 14px;
+        width: 70%;
+         margin-bottom: 5px;
+     }
+     .skeleton-description {
+        height: 11px;
+        width: 95%;
+         margin-bottom: 4px;
+     }
+      .skeleton-description.short {
+         width: 90%;
+         margin-bottom: 8px;
+     }
+     .skeleton-source {
+        height: 9px;
+        width: 30%;
+         margin-top: 4px;
+     }
+
+
+    .app-footer {
+        margin-top: 30px;
+        padding: 12px 4px 6px 4px;
+        font-size: 0.7rem;
+    }
+     .app-footer p {
+        margin-bottom: 6px;
+    }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { config } from "dotenv";
-import OpenAI from "openai";
+import OpenAI from "openai/index.mjs";
 import { parseArgs } from "node:util";
 import { getApiBaseUrl } from "../utils.js";
 import chalk from "chalk";
@@ -51,16 +51,8 @@ async function main() {
         })()
 
         console.log(chalk.magenta('→ API URL :'), apiUrl)
-        console.log(chalk.magenta('→ Model   :'), model)
-        console.log(chalk.magenta('→ App ID  :'), shape_app_id)
 
         console.log("\n")
-
-        // If the user provided a message on the command line, use that one
-        const userMessage = positionals.length > 0 ? positionals.join(" ") : "Hello. What's your name?";
-        const messages = [
-            { role: "user", content: userMessage }
-        ];
 
         // Create the client with the shape API key and the Shapes API base URL
         const shapes_client = new OpenAI({
@@ -68,38 +60,12 @@ async function main() {
             baseURL: apiUrl
         });
 
-        // Set up headers for user identification and conversation context
-        const headers = {};
-        if (values.userId) {
-            headers["X-User-Id"] = values.userId;  // If not provided, all requests will be attributed to
-            // the user who owns the API key. This will cause unexpected behavior if you are using the same API
-            // key for multiple users. For production use cases, either provide this header or obtain a
-            // user-specific API key for each user.
-        }
-
-        // Only add channel ID if provided
-        if (values.channelId) {
-            headers["X-Channel-Id"] = values.channelId;  // If not provided, all requests will be attributed to
-            // the user. This will cause unexpected behavior if interacting with multiple users
-            // in a group.
-        }
-
-        // Send the message to the Shapes API. This will use the shapes-api model.
-        const resp = await shapes_client.chat.completions.create({
-            model: model,
-            messages: messages,
-            headers: headers,
+        // Fetch the list of the user's recent shapes as models
+        // This list will be dependent on the type of call authentication,
+        // so it can fetch the shapes either for the API key creator or the auth token user
+        shapes_client.models.list().then((models) => {
+            console.log(models);
         });
-
-        console.log(chalk.gray("Raw response:"), resp);
-
-        console.log("\n")
-
-        if (resp.choices && resp.choices.length > 0) {
-            console.log(chalk.green("Reply:"), resp.choices[0].message.content);
-        } else {
-            console.log(chalk.red("No choices in response:"), resp);
-        }
     } catch (error) {
         console.error(chalk.red("Error:"), error);
     }

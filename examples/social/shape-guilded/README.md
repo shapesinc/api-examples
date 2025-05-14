@@ -18,6 +18,7 @@ This is an example of a Guilded bot that integrates with the Shapes API, allowin
     ```bash
     npm install
     ```
+- [note: do not run `npm audit fix` command after installing dependencies or it will give you errors (do `npm install guilded.js@latest` if it does.)]
 
 3.  **Configure environment variables:**
     Create a `.env` file in the `shape-guilded` directory by copying the `.env.example` file:
