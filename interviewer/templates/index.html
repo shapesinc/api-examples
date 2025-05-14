@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Interview Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tech Interview Simulator</h1>
+            <p>Practice your technical interview skills with our AI interviewer</p>
+        </header>
+
+        <div id="setup-section" class="setup-section">
+            <div class="setup-card">
+                <h2>Interview Setup</h2>
+                <div class="form-group">
+                    <label for="category">Select Technology:</label>
+                    <select id="category" name="category">
+                        <option value="">Choose a technology...</option>
+                        <option value="python">Python</option>
+                        <option value="react">React</option>
+                        <option value="c">C</option>
+                    </select>
+                </div>
+
+                <button id="start-interview" class="primary-button">Start Interview</button>
+            </div>
+        </div>
+
+        <div id="interview-section" class="interview-section hidden">
+            <div class="chat-layout">
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="input-container">
+                        <textarea id="user-input" placeholder="Type your answer here..." rows="3"></textarea>
+                        <button id="send-message" class="primary-button">Send</button>
+                    </div>
+                </div>
+                <div id="code-panel" class="code-panel hidden">
+                    <button id="toggle-code-panel" class="toggle-panel-btn">Show Code Editor</button>
+                    <div id="code-editor-container">
+                        <textarea id="code-input"></textarea>
+                        <button id="send-code" class="primary-button">Send Code</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+</body>
+</html> 
