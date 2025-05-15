@@ -45,6 +45,9 @@ After each answer:
 ➜ accuracy calculated  
 ➜ token usage recorded  
 ➜ JSON results written.
+
+---
+
 ## 3 — File-by-File Breakdown
 
 | File | Purpose | Key Points |
@@ -57,6 +60,9 @@ After each answer:
 | **`test_qa.py`** | **🚀 Benchmark driver** | • Loads `facebook/babi_qa` **Task 1**<br>• Runs phases *with* and *without* Pinecone<br>• Tracks accuracy, token counts, cost<br>• Writes JSON: `babi_qa_task1_{with,without}_pinecone.json` |
 | **`README.md`** | Top-level read-me | Install guide, Shapes overview, quick-start |
 | **`docs/PRICE_BREAKDOWN.md`** | Cost & accuracy table | Shows token savings, Pinecone cost, 21.8 % net savings |
+
+---
+
 ## 4 — Workflow / Data-Flow Diagram
 
 1. **Dataset Loader** (`test_qa.py`) pulls bAbI QA Task 1 via hugging face datasets.  
@@ -75,6 +81,8 @@ After each answer:
 4. Response recorded, token usage counted.  
 5. Metrics & JSON logs written.
 
+---
+
 ## 5 — Extending the PoC
 
 * **Smarter Chunking** – experiment with sentence windows, sliding context, or semantic splitting.  
@@ -85,6 +93,8 @@ After each answer:
 * **Observability** – plug in logging (e.g., Weights & Biases) to track per-question latency / cost / F1.  
 * **Fine-Tuned Llama** – swap the vanilla 8B for a LoRA fine-tune on extractive QA to recoup the 4 % accuracy gap.  
 * **Vector DB Cost Optimisation** – play with pod types (Starter → Standard → Serverless) and auto-scale rules.
+
+---
 
 ## 6 — Proof-of-Concept Caveats & Next Steps  <!-- originally Section 7 -->
 
