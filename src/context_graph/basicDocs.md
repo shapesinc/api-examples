@@ -13,12 +13,10 @@ This proof-of-concept shows how **semantic retrieval (Pinecone) + local context 
 
 We benchmark two pipelines on **bAbI QA Task 1** (100 questions):
 
-```text
 | Pipeline | Prompt Strategy | Goal |
 |----------|-----------------|------|
 | **Baseline** | Send *full* story so far with every question | Measure naïve cost & accuracy |
 | **Retrieval** | Send only the *current turn* + **2 most-relevant past chunks** from Pinecone | Measure savings vs. accuracy hit |
-```
 
 ---
 
@@ -53,7 +51,6 @@ After each answer:
 
 ## 3 — File-by-File Breakdown
 
-```text
 | File | Purpose | Key Points |
 |------|---------|------------|
 | **`setup.py`** | pip-installable package scaffold | Declares core deps (`pinecone`, `openai`, `sentence-transformers`, …) |
@@ -64,7 +61,6 @@ After each answer:
 | **`test_qa.py`** | **🚀 Benchmark driver** | • Loads `facebook/babi_qa` **Task 1**<br>• Runs phases *with* and *without* Pinecone<br>• Tracks accuracy, token counts, cost<br>• Writes JSON: `babi_qa_task1_{with,without}_pinecone.json` |
 | **`README.md`** | Top-level read-me | Install guide, Shapes overview, quick-start |
 | **`docs/PRICE_BREAKDOWN.md`** | Cost & accuracy table | Shows token savings, Pinecone cost, 21.8 % net savings |
-```
 
 ---
 
@@ -105,7 +101,6 @@ After each answer:
 
 This repository demonstrates **only a minimal, end-to-end proof-of-concept** for RAG-style retrieval on the *bAbI QA Task 1* benchmark. As such, several areas remain deliberately simple and can be improved:
 
-```text
 | Area | Current PoC Choice | Why It's Imperfect | Improvement Ideas |
 |------|-------------------|--------------------|-------------------|
 | **Sentence-Level Chunking** | Each line of the story is ingested as an independent Pinecone vector. | Ignores cross-sentence context; can split entities across chunks. | Try sliding windows, paragraph grouping, or dynamic span merging. |
@@ -115,6 +110,5 @@ This repository demonstrates **only a minimal, end-to-end proof-of-concept** for
 | **Evaluation Set** | 100 validation Qs from bAbI Task 1. | Single synthetic domain; short stories; single-hop answers. | Expand to Tasks 2–20, HotpotQA, or Natural Questions for multi-hop and open-domain stress-tests. |
 | **Costing** | Token cost + starter-tier Pinecone fees. | Static prices; ignores real-world autoscaling, cold-start latency. | Profile throughput under load; test Pinecone serverless or hybrid on-disk indexes. |
 | **LLM** | Default Shapes engine = Llama-3 8B, zero-shot. | 4 % accuracy drop vs. full-context baseline. | Fine-tune (LoRA) on extractive QA; explore 70B for parity; evaluate quantized variants. |
-```
 
 > **Take-away:** the current pipeline already **cuts LLM token spend by ≈ 91 % and total cost by ≈ 22 %** while trimming accuracy by only four points — but smarter retrieval, prompt engineering, and model tuning can push that frontier further.
