@@ -14,7 +14,7 @@ Star and contribute to this repository to receive free hosting for your integrat
 Shapes API provides a programmatic way to integrate Shapes into any application or platform. It follows the OpenAI-compatible API standard, making it easy to implement with existing libraries and SDKs.
 
 ## Demos
-To get a sense of what’s possible, see what people have already built: 
+To get a sense of what's possible, see what people have already built: 
 
 - Omegle with Shapes https://omegle-ai.vercel.app by [@khawajapartners](https://github.com/zahidkhawaja)
 - Playing Chess with Shapes https://shapeschess.vercel.app by [@kiyosh11](https://github.com/kiyosh11)
@@ -227,3 +227,119 @@ We are shipping new features to the Shapes API every day. Next on our list is:
 
 ---
 © 2025 Shapes, Inc.
+
+# Semantic Context Graph for Shapes API
+
+This project implements a semantic context graph system for the Shapes API, enabling more efficient and contextually relevant responses by dynamically selecting relevant memory chunks.
+
+## Features
+
+- Semantic context management using Pinecone vector store
+- Dynamic context selection based on query relevance
+- Integration with Shapes API
+- Evaluation using HotpotQA dataset
+- Metrics tracking (ROUGE, BLEU, token usage)
+
+## Installation
+
+1. Create a virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Install dependencies:
+```bash
+pip install openai pinecone-client sentence-transformers datasets evaluate python-dotenv
+```
+
+3. Set up environment variables in `.env`:
+```
+SHAPESINC_API_KEY=your_api_key
+PINECONE_API_KEY=your_pinecone_key
+SHAPESINC_SHAPE_USERNAME=your_shape_username
+```
+
+## Project Structure
+
+```
+.
+├── src/
+│   ├── context_graph/
+│   │   ├── vector_store.py      # Pinecone vector store implementation
+│   │   └── context_manager.py   # Context management system
+│   ├── evaluation/
+│   │   └── hotpot_evaluator.py  # HotpotQA evaluation
+│   └── shapes_client.py         # Shapes API client with context graph
+├── tests/                       # Test files
+└── README.md
+```
+
+## Usage
+
+### Basic Usage
+
+```python
+from src.shapes_client import ShapesClient
+
+# Initialize client with context graph
+client = ShapesClient(use_context_graph=True)
+
+# Send a message
+response = await client.chat(
+    message="What's the weather like?",
+    user_id="user123",
+    channel_id="channel456"
+)
+
+print(response["response"])
+```
+
+### Evaluation
+
+Run the HotpotQA evaluation:
+
+```python
+from src.evaluation.hotpot_evaluator import HotpotEvaluator
+
+evaluator = HotpotEvaluator(use_context_graph=True)
+results = await evaluator.evaluate_batch(num_samples=10)
+print(results)
+```
+
+## How It Works
+
+1. **Context Storage**:
+   - Each message and response is stored in the vector store
+   - Text is embedded using the SentenceTransformer model
+   - Vectors are stored in Pinecone for efficient similarity search
+
+2. **Context Selection**:
+   - When a new message arrives, the system searches for relevant context
+   - Top-k most similar contexts are retrieved
+   - Context is combined with the current message for a more informed response
+
+3. **Evaluation**:
+   - Uses HotpotQA dataset for evaluation
+   - Compares performance with and without context graph
+   - Tracks ROUGE, BLEU, and token usage metrics
+
+## Performance Metrics
+
+The system is evaluated on:
+- ROUGE scores (precision, recall, F1)
+- BLEU score
+- Token usage efficiency
+- Response quality
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+MIT License
