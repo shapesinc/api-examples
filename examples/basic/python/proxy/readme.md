@@ -4,7 +4,7 @@ Step-by-Step Setup Instructions
 1. Prepare your project folder
 2. download your files from repo:
 it should look like:
-main.py — your FastAPI app
+proxy.py — your FastAPI app
 .env — for your API key and base URL
 requirements.txt — dependencies list
 3. fill env file
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ```
 5.Run Server
 ```
-uvicorn main:app --reload
+python3 -m uvicorn proxy:app --reload
 ```
 This will start your proxy at http://127.0.0.1:8000
 
