@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
 import json
 import time
@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any, Generator
 from openai import AsyncOpenAI
-from context_graph.vector_store import VectorStore
-from context_graph.context_graph import ContextGraph
+from .vector_store import VectorStore
+from .context_graph import ContextGraph
 from utils.rate_limiter import RateLimiter
 from datasets import load_dataset
 from dotenv import load_dotenv
@@ -39,7 +39,7 @@ class BabiQATester:
         self.context_graph = ContextGraph(self.vector_store)
         
         # Results storage
-        self.results_dir = "test_results"
+        self.results_dir = os.path.join(os.path.dirname(__file__), "../../test_results")
         os.makedirs(self.results_dir, exist_ok=True)
         
         # Load bAbI QA dataset
@@ -176,7 +176,7 @@ class BabiQATester:
     
     def _save_results(self, results: Dict[str, Any], phase: str):
         """Save test results to file."""
-        filename = f"{self.results_dir}/babi_qa_{self.task_id}_{phase}.json"
+        filename = os.path.join(self.results_dir, f"babi_qa_{self.task_id}_{phase}.json")
         with open(filename, 'w') as f:
             json.dump(results, f, indent=2)
     
@@ -248,105 +248,54 @@ class BabiQATester:
                 for i, ctx in enumerate(pinecone_context, 1):
                     print(f"{i}. {ctx}")
                 
-                # For Pinecone version: combine top 2 chunks + new context
-                # Only include context that hasn't been seen before
-                new_context = [ctx for ctx in context if ctx not in pinecone_context]
-                context_to_use = pinecone_context + new_context
-                print(f"Total context (Pinecone top-2 + new): {len(context_to_use)} facts")
-                
-                # Structure messages - one for context, one for question
-                messages = [
-                    {
-                        "role": "user",
-                        "content": "\n".join(context_to_use)
-                    },
-                    {
-                        "role": "user",
-                        "content": question
-                    }
-                ]
+                # Use Pinecone context for the prompt
+                context_text = "\n".join(pinecone_context)
             else:
-                # For non-Pinecone version: combine full history into one message
-                context_to_use = example["full_history"]
-                print(f"Using full conversation history: {len(context_to_use)} facts")
-                
-                # Structure messages - one for full history, one for question
-                messages = [
-                    {
-                        "role": "user",
-                        "content": "\n".join(context_to_use)
-                    },
-                    {
-                        "role": "user",
-                        "content": question
-                    }
-                ]
+                # Use full history for non-Pinecone version
+                context_text = "\n".join(example["full_history"])
+            
+            # Construct the prompt
+            messages = [
+                {"role": "user", "content": context_text},
+                {"role": "user", "content": question}
+            ]
             
             # Get model response
-            prediction = await self._get_model_response(messages)
+            model_answer = await self._get_model_response(messages)
             
-            # Check accuracy and provide feedback
-            accuracy = self._calculate_accuracy(prediction, gold_answer)
-            
-            # Print accuracy for this question
-            print(f"Question {question_number} accuracy: {accuracy:.2%}")
-            print(f"Gold answer: {gold_answer}")
-            print(f"Model answer: {prediction}")
-            if accuracy == 0:
-                print(f"Feedback provided: No, the correct answer is {gold_answer}")
-            
-            # Record results
+            # Calculate accuracy
+            accuracy = self._calculate_accuracy(model_answer, gold_answer)
             results["correct_answers"] += accuracy
-            question_result = {
+            
+            # Store results
+            results["question_results"].append({
                 "question_number": question_number,
-                "prompt": messages,  # Store the raw prompt sent to the model
+                "prompt": messages,
                 "gold_answer": gold_answer,
-                "model_answer": prediction,
+                "model_answer": model_answer,
                 "accuracy": accuracy,
                 "support_ids": support_ids,
-                "context_used": len(context_to_use),
-                "feedback_provided": accuracy == 0
-            }
+                "context_used": len(context),
+                "feedback_provided": False
+            })
             
-            # Add fetched context for Pinecone version
-            if self.use_pinecone:
-                question_result["fetched_context"] = context_to_use
-            
-            results["question_results"].append(question_result)
-            
-            # Save results after each question
+            # Save intermediate results
             self._save_results(results, phase_name)
             
-            # Wait between requests to avoid rate limiting
-            await asyncio.sleep(15)  # 15 seconds between requests
-        
-        # Calculate final accuracy
-        results["accuracy"] = results["correct_answers"] / len(self.dataset)
-        
-        # Save final results
-        self._save_results(results, phase_name)
+            # Add a small delay between questions
+            await asyncio.sleep(1)
         
         return results
 
 async def main():
     # Test task 1 (Single supporting fact)
     # Create both testers
-    tester_without = BabiQATester(task_id="task1", use_pinecone=False)
-    tester_with = BabiQATester(task_id="task1", use_pinecone=True)
+    without_pinecone = BabiQATester(task_id="task1", use_pinecone=False)
+    with_pinecone = BabiQATester(task_id="task1", use_pinecone=True)
     
-    print("\nStarting both test phases concurrently...")
-    # Run both tests concurrently
-    results_without, results_with = await asyncio.gather(
-        tester_without.run_test_phase(),
-        tester_with.run_test_phase()
-    )
-    
-    # Print summary
-    print("\n=== Test Results Summary ===")
-    print(f"Task 1 (Single supporting fact):")
-    print(f"Without Pinecone Accuracy: {results_without['accuracy']:.2%}")
-    print(f"With Pinecone Accuracy: {results_with['accuracy']:.2%}")
-    print(f"Improvement: {results_with['accuracy'] - results_without['accuracy']:.2%}")
+    # Run tests
+    await without_pinecone.run_test_phase()
+    await with_pinecone.run_test_phase()
 
 if __name__ == "__main__":
     asyncio.run(main()) 

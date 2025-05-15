@@ -15,4 +15,4 @@ setup(
         "requests",
     ],
     python_requires=">=3.8",
-)
+) 

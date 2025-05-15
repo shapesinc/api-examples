@@ -21,7 +21,7 @@ from config import (
 # Constants that were removed from config
 MEDIA_RESPONSE = "i am blind help! i dont have vision to see images yet"  # Changed to acknowledge we can see images
 from conversation_manager import ConversationManager
-from shapes_client import ShapesClient, RateLimitExceeded
+from src.context_graph.shapes_client import ShapesClient, RateLimitExceeded
 from utils import extract_command_for_bot, is_bot_mentioned, is_reply_to_bot, get_user_identifier
 from access_manager import AccessManager
 

@@ -2,7 +2,7 @@ import os
 from typing import List, Dict, Any, Optional
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from .context_graph.context_manager import ContextManager
+from .context_manager import ContextManager
 
 load_dotenv()
 

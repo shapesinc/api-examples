@@ -32,6 +32,7 @@ You will need to generate an API Key. Get yours [here](https://shapes.inc/develo
 
 ```python
 from openai import OpenAI
+from src.context_graph.shapes_client import ShapesClient
 
 shapes_client = OpenAI(
     api_key="<your-API-key>",
@@ -52,6 +53,7 @@ print(response)
 
 ```javascript
 const openai = require("openai");
+from src.context_graph.shapes_client import ShapesClient
 
 const shapes_client = new OpenAI({
     apiKey: "<your-API-key>",
@@ -280,7 +282,7 @@ SHAPESINC_SHAPE_USERNAME=your_shape_username
 ### Basic Usage
 
 ```python
-from src.shapes_client import ShapesClient
+from src.context_graph.shapes_client import ShapesClient
 
 # Initialize client with context graph
 client = ShapesClient(use_context_graph=True)
