@@ -67,5 +67,9 @@ Vercel Setup:
 
 ### Submit issues or pull requests. For design tweaks (e.g., color adjustments), describe changes clearly.
 
+Todo:
+- add eraser
+- add ability to edit messages
+- other idk
 License
 MIT License idk!
