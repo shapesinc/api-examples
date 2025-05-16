@@ -30,8 +30,8 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/codegingerai.git
-   cd codegingerai
+   git clone https://github.com/shapesinc/shapes-api
+   cd examples/github/codegingerai
    ```
 
 2. Install dependencies:
@@ -40,7 +40,7 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
    ```
 3. Go to https://github.com/settings/apps 
    and create a github app of your own
-   
+
 4. Set up environment variables:
    ```bash
    # Copy the example environment file
