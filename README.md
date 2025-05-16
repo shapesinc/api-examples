@@ -51,7 +51,7 @@ print(response)
 ### 🌐 JavaScript
 
 ```javascript
-const { OpenAI } = require("openai");
+const openai = require("openai");
 
 const shapes_client = new OpenAI({
     apiKey: "<your-API-key>",
