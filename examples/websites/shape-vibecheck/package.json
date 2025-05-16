@@ -1,0 +1,30 @@
+{
+  "name": "shape-vibe-checker",
+  "version": "1.0.0",
+  "description": "a webapp made to check your vibes on x.com using Shapes api",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^12.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "axios": "^0.21.1",
+    "@vercel/kv": "^0.2.0",
+    "cheerio": "^1.0.0-rc.10",
+    "openai": "^4.98.0",
+    "framer-motion": "^4.1.17",
+    "limiter": "^2.1.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^12.0.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.1"
+  }
+}
