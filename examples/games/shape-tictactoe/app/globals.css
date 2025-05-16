@@ -1,0 +1,215 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+:root {
+  --bg-color: #f4f4f9;
+  --text-color: #333;
+  --board-bg: #fff;
+  --board-border: #ccc;
+  --cell-bg: #fff;
+  --cell-bg-hover: #e0e0e0;
+  --cell-bg-filled: #f0f0f0;
+  --cell-x-color: #007bff;
+  --cell-o-color: #ff4d4d;
+  --status-default: #555;
+  --status-win: #28a745;
+  --status-lose: #dc3545;
+  --status-tie: #ffc107;
+  --btn-primary-bg: #007bff;
+  --btn-primary-bg-hover: #0056b3;
+  --btn-primary-text: #fff;
+  --btn-secondary-bg: #6c757d;
+  --btn-secondary-bg-hover: #5a6268;
+  --btn-secondary-text: #fff;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+.dark {
+  --bg-color: #1a1a1a;
+  --text-color: #ddd;
+  --board-bg: #2c2c2c;
+  --board-border: #555;
+  --cell-bg: #333;
+  --cell-bg-hover: #444;
+  --cell-bg-filled: #3a3a3a;
+  --cell-x-color: #66b0ff;
+  --cell-o-color: #ff6666;
+  --status-default: #bbb;
+  --status-win: #34c759;
+  --status-lose: #ff4444;
+  --status-tie: #ffca28;
+  --btn-primary-bg: #66b0ff;
+  --btn-primary-bg-hover: #3385ff;
+  --btn-primary-text: #000;
+  --btn-secondary-bg: #888;
+  --btn-secondary-bg-hover: #666;
+  --btn-secondary-text: #fff;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.container {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  transition: var(--transition);
+}
+
+.header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.game-wrapper {
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 300px;
+  height: 300px;
+  background: var(--board-bg);
+  border: 2px solid var(--board-border);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: var(--shadow);
+}
+
+.cell {
+  background: var(--cell-bg);
+  border: 1px solid var(--board-border);
+  border-radius: 5px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cell-empty:hover {
+  background: var(--cell-bg-hover);
+}
+
+.cell-filled {
+  background: var(--cell-bg-filled);
+  cursor: not-allowed;
+}
+
+.cell-x {
+  color: var(--cell-x-color);
+}
+
+.cell-o {
+  color: var(--cell-o-color);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.status {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--status-default);
+}
+
+.status-win {
+  color: var(--status-win);
+}
+
+.status-lose {
+  color: var(--status-lose);
+}
+
+.status-tie {
+  color: var(--status-tie);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-bg-hover);
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+}
+
+.btn-secondary:hover {
+  background: var(--btn-secondary-bg-hover);
+}
+
+.btn-icon {
+  display: inline-block;
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .board {
+    width: 250px;
+    height: 250px;
+  }
+
+  .cell {
+    font-size: 2rem;
+  }
+
+  .btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+}
