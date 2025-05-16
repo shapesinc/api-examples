@@ -38,8 +38,10 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
    ```bash
    npm install
    ```
-
-3. Set up environment variables:
+3. Go to https://github.com/settings/apps 
+   and create a github app of your own
+   
+4. Set up environment variables:
    ```bash
    # Copy the example environment file
    cp .env.example .env
@@ -55,7 +57,7 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
    PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nYOUR-PRIVATE-KEY-HERE\n-----END RSA PRIVATE KEY-----"
    ```
 
-4. Set up GitHub App credentials:
+5. Set up GitHub App credentials:
    - Create a new GitHub App in your organization
    - Set the webhook URL to your deployment URL
    - Generate an RSA private key:
@@ -65,7 +67,7 @@ CodeGingerAI is an intelligent GitHub bot that automatically reviews pull reques
      ```
    - Copy the contents of the private key file into the GIHUB_PRIVATE_KEY environment variable
 
-5. Start the bot:
+6. Start the bot:
    ```bash
    npm start
    ```
