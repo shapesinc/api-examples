@@ -25,6 +25,7 @@ export interface GameState {
   selectedItem: Item | null;
   inventoryItemToSell: Item | null;
   currentOffer: number | null;
+  isShopOpen: boolean; // Added for shop visibility
   
   // Legacy - will be migrated to merchant-specific state
   messages: Array<{ role: 'user' | 'merchant'; content: string }>;
@@ -40,6 +41,7 @@ export interface GameState {
   setSelectedItem: (item: Item | null) => void;
   setInventoryItemToSell: (item: Item | null) => void;
   setCurrentOffer: (offer: number | null) => void;
+  setIsShopOpen: (isOpen: boolean) => void; // Added for shop visibility
   
   // Actions - Inventory management
   addToInventory: (item: Item) => void;
@@ -102,6 +104,7 @@ const useGameStore = create<GameState>((set, get) => {
     selectedItem: null,
     inventoryItemToSell: null,
     currentOffer: null,
+    isShopOpen: false, // Initialized shop state
     
     // Legacy state
     messages: [],
@@ -133,6 +136,7 @@ const useGameStore = create<GameState>((set, get) => {
     setSelectedItem: (item) => set({ selectedItem: item }),
     setInventoryItemToSell: (item) => set({ inventoryItemToSell: item }),
     setCurrentOffer: (offer) => set({ currentOffer: offer }),
+    setIsShopOpen: (isOpen) => set({ isShopOpen: isOpen }), // Implemented action
     
     // Actions - Inventory management
     addToInventory: (item) => set((state) => ({

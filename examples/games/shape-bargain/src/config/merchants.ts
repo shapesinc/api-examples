@@ -6,9 +6,8 @@ export interface MerchantConfig {
 }
 
 export const MERCHANTS_CONFIG: MerchantConfig[] = [
-  { id: 'hutao-qaiq', name: 'Hu Tao', avatar: '/merchant-hutao.png' },
-  { id: 'tenshi', name: 'Tenshi', avatar: '/merchant-tenshi.png' },
-  { id: 'talkingbenn', name: 'Talking Ben', avatar: '/merchant-benn.png' },
+  { id: 'tenshithecelestialmerchant', name: 'Tenshi', avatar: '/merchant-tenshi.png' },
+  { id: 'lyra-zkbm', name: 'Lyra', avatar: '/merchant-obama.png' },
 ];
 
 // Placeholder for a default merchant if needed, or can be the first from the array.
