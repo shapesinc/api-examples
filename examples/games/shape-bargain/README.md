@@ -1,29 +1,31 @@
-# Shape Bargain
+# Bargain with Shapes!
 
-Shape Bargain is a Next.js-based merchant bargaining game built with the shapes-api. In this game, you negotiate with various merchants to buy and sell items, managing your inventory and gold to make the best deals possible.
+![image](https://github.com/user-attachments/assets/ac5fcc53-b785-4bd3-b5ce-df2de749d9f2)
 
-If you wish to train your own shape, check out examples.md for fine-tune chats!
+'Merchant of Venice' is a Next.js-based merchant bargaining game built with the shapes-api. In this game, you negotiate with various merchants to buy and sell items, managing your inventory and gold to make the best deals possible.
+
+You can play a live demo right here: [https://shapes-merchant-game.vercel.app/](https://shapes-merchant-game.vercel.app/)
+
+If you wish to train your own shape, check out examples.md for fine-tune chats examples!
+
+![image](https://github.com/user-attachments/assets/c73c9c59-e6e5-4b2b-9c8e-38f84823683f)
 
 ## Features
 
 - Multiple unique merchants with different personalities
-- Bargaining and negotiation gameplay
-- Inventory management system
-- Gold-based economy
-- Beautiful UI built with Tailwind CSS and Radix UI components
+- Bargain, negotiate and make deals with shapes!
+- Persistent inventory system (across the current session)
+- Generative UI elements based on the conversation
+
+![image](https://github.com/user-attachments/assets/15e76e95-5b22-4207-ac50-7b6de9a1a2d5)
+
 
 ## Getting Started
 
 First, install the dependencies:
 
 ```bash
-npm install
-# or
-yarn install
-# or
 pnpm install
-# or
-bun install
 ```
 
 Next, create a `.env` file in the root directory with your Shapes API key:
@@ -37,16 +39,10 @@ This API key is required for the merchant chat functionality. You can get an API
 Then, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to play the game.
+And open [http://localhost:3000](http://localhost:3000) with your browser to play the game.
 
 ## Game Overview
 
@@ -63,3 +59,4 @@ In Shape Bargain, you'll:
 - Tailwind CSS
 - Framer Motion for animations
 - Zustand for state management
+- Shapes-api for agentic communication
