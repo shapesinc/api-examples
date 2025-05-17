@@ -1,0 +1,39 @@
+.vibe-card {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 1rem;
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.downloadButton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.downloadButton:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.downloadButton:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+  .vibe-card {
+    padding: 0.5rem;
+  }
+}
