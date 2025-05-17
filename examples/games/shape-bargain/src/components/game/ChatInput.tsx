@@ -19,9 +19,12 @@ export default function ChatInput({ isLoading, onSendMessage, messagesCount }: C
   ];
 
   // Reset suggestions visibility when game is restarted (messagesCount changes to 0)
+  // Hide suggestions if there is at least one player message
   useEffect(() => {
     if (messagesCount === 0) {
       setShowSuggestions(true);
+    } else if (messagesCount > 0) {
+      setShowSuggestions(false);
     }
   }, [messagesCount]);
 

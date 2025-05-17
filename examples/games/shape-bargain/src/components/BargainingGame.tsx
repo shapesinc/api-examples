@@ -17,7 +17,6 @@ import { ShoppingBag, CircleDot, ChevronRight, ChevronLeft, ArrowLeft } from 'lu
 export default function BargainingGame() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [isShopOpen, setIsShopOpen] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
   const [userScrolling, setUserScrolling] = useState(false);
   const [isDirectoryView, setIsDirectoryView] = useState(true);
@@ -27,6 +26,8 @@ export default function BargainingGame() {
     inventory,
     selectedItem,
     inventoryItemToSell,
+    isShopOpen,
+    setIsShopOpen,
   } = useGameStore();
 
   const {
@@ -169,7 +170,10 @@ export default function BargainingGame() {
 
   // Handle merchant selection
   const handleSelectMerchant = useCallback((merchantId: string) => {
+    // First set the merchant ID, which will trigger the useEffect in useGameLogic
     setCurrentMerchantId(merchantId);
+    
+    // Then switch to the chat view
     setIsDirectoryView(false);
   }, [setCurrentMerchantId]);
 
@@ -189,7 +193,7 @@ export default function BargainingGame() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
             >
               <MerchantDirectory 
                 merchants={merchants}
@@ -203,7 +207,7 @@ export default function BargainingGame() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
             >
               <div className="flex items-center space-x-4 mb-4">
                 {/* Back button and Merchant info */}

@@ -2,6 +2,8 @@
 
 Shape Bargain is a Next.js-based merchant bargaining game built with the shapes-api. In this game, you negotiate with various merchants to buy and sell items, managing your inventory and gold to make the best deals possible.
 
+If you wish to train your own shape, check out examples.md for fine-tune chats!
+
 ## Features
 
 - Multiple unique merchants with different personalities

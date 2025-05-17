@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import useGameStore from '@/store/gameStore';
 import { chatWithMerchant } from '@/lib/shapes-api';
 import { type Item } from '@/store/gameStore';
-import { MERCHANT_PROMPT } from '@/lib/merchantPrompt';
+import { MERCHANT_PROMPT, getInitializePrompt } from '@/lib/merchantPrompt';
+import { DEFAULT_MERCHANT_ID } from '@/config/merchants';
 
 // Cache for item parsing results to avoid redundant processing
 const itemParsingCache = new Map<string, Item[]>();
 // Cache for deal parsing results
 const dealParsingCache = new Map<string, any>();
+// Cache for UI action parsing results
+const uiActionParsingCache = new Map<string, any[]>();
 
 export default function useGameLogic() {
   const [isLoading, setIsLoading] = useState(false);
@@ -80,63 +83,108 @@ export default function useGameLogic() {
       return itemParsingCache.get(content) || [];
     }
 
-    console.log('[parseItemsFromResponse] Processing content');
-    console.log('[parseItemsFromResponse] Raw content:', content);
+    // Skip item parsing if this is a deal acceptance message
+    if (content.includes('[DEAL ACCEPTED]') || content.includes('```deal') || content.match(/deal\s*\n\s*\{/)) {
+      itemParsingCache.set(content, []);
+      return [];
+    }
     
-    // Check for specific item patterns that may appear in various formats
+    // Fast pre-check if there are likely any items at all
+    const hasPotentialItems = /\((\d+)(?:\s*gold)?\)|\d+\s*gold/.test(content);
+    if (!hasPotentialItems) {
+      itemParsingCache.set(content, []);
+      return [];
+    }
+    
+    // Clean the input text by removing any AI instruction text and internal notes
+    let cleanContent = content;
+    // Remove content between --- markers (often used for AI instructions)
+    cleanContent = cleanContent.replace(/---[\s\S]*?---/g, '');
+    // Remove lines starting with common AI instruction markers
+    cleanContent = cleanContent.replace(/^(Here's|I would|Certainly|This response|As Tenshi).*$/gm, '');
+    
     const patterns = [
-      // Standard bullet pattern: "* Item Name (100 gold)"
-      /(?:^|\n|\r)[*-]\s*([^(]+?)\s*\((\d+)\s*gold\)/gim,
+      // Standard bullet/dash pattern with more flexible price format: "- Item Name (123)" or "* Item Name (123)"
+      /(?:^|\n|\r)[*-]\s*([^(]+?)\s*\((\d+)(?:\s*gold)?\)/gim,
       
-      // Alternative format that might appear: "Item Name - 100 gold"
-      /(?:^|\n|\r)([^-:\n\r]+?)\s*[-–]\s*(\d+)\s*gold/gim,
+      // Non-bullet format with parentheses: "Item Name (50 gold)"
+      /(?:^|\n|\r)([^()\n\r*-][^()\n\r]+?)\s*\((\d+)(?:\s*gold)?\)/gim,
       
-      // Items mentioned with price: "the Item Name (costs 100 gold)"
-      /\b(?:the|a|an)\s+([^()\n\r,]{3,30}?)\s*(?:\((?:costs?|worth|priced at)\s+)?(\d+)\s*gold/gi
+      // Alternative format that might appear: "Item Name - 100 gold" or "Item Name: 100 gold"
+      /(?:^|\n|\r)([^\-:\n\r]+?)\s*[-–:]\s*(\d+)\s*gold/gim,
+      
+      // Items mentioned with price: "the Item Name (costs 100 gold)" or similar variations
+      /\b(?:the|a|an)\s+([^()\n\r,]{3,30}?)\s*(?:\((?:costs?|worth|priced at|sells for)\s+)?(\d+)\s*gold/gi,
+      
+      // Direct format: "Item Name (100 gold)" without bullet/dash
+      /^([^(]+?)\s*\((\d+)\s*gold\)/gim,
+      
+      // Price first format: "(100 gold) Item Name"
+      /\((\d+)\s*gold\)\s*([^(\n\r]+?)(?=\n|$|\()/gim
     ];
     
-    let allItems: { name: string, basePrice: number, id: string }[] = [];
+    // Use a Map for faster duplicate checking based on lowercase names
+    const itemsMap = new Map<string, { name: string, basePrice: number, id: string }>();
     
-    // Try each pattern
-    for (let i = 0; i < patterns.length; i++) {
-      const matches = Array.from(content.matchAll(patterns[i]));
-      console.log(`[parseItemsFromResponse] Pattern ${i+1} matches:`, matches.length);
-      if (matches.length > 0) {
-        console.log(`[parseItemsFromResponse] First match for pattern ${i+1}:`, matches[0]);
-      }
-      
-      const patternItems = matches
-        .map(match => {
-          // Only process if we have both name and price
-          if (match[1] && match[2]) {
-            const name = match[1].trim();
-            const price = parseInt(match[2], 10);
-            
-            // Only create item if we have valid name and price
-            if (name && !isNaN(price) && name.length > 2 && price > 0) {
-              return {
-                id: name.toLowerCase().replace(/\s+/g, '-'),
-                name,
+    // Try primary pattern first (most common format)
+    const primaryMatches = Array.from(cleanContent.matchAll(patterns[0]));
+
+    if (primaryMatches.length > 0) {
+      // Process items from primary pattern
+      primaryMatches.forEach(match => {
+        const name = match[1];
+        const priceStr = match[2];
+        
+        if (name && priceStr) {
+          const cleanName = name.trim();
+          const price = parseInt(priceStr, 10);
+          
+          if (cleanName && !isNaN(price) && cleanName.length > 2 && price > 0) {
+            const lowercaseName = cleanName.toLowerCase();
+            if (!itemsMap.has(lowercaseName)) {
+              itemsMap.set(lowercaseName, {
+                id: lowercaseName.replace(/\s+/g, '-'),
+                name: cleanName,
                 basePrice: price
-              };
+              });
             }
           }
-          return null;
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null);
-      
-      allItems = [...allItems, ...patternItems];
+        }
+      });
+    } 
+    
+    // If primary pattern didn't yield results, try all patterns
+    if (itemsMap.size === 0) {
+      // Try all patterns
+      for (let i = 0; i < patterns.length; i++) {
+        const matches = Array.from(cleanContent.matchAll(patterns[i]));
+        
+        matches.forEach(match => {
+          // Handle price-first format (pattern at index 5) differently
+          const isPriceFirstPattern = i === 5;
+          const [name, priceStr] = isPriceFirstPattern ? [match[2], match[1]] : [match[1], match[2]];
+          
+          if (name && priceStr) {
+            const cleanName = name.trim();
+            const price = parseInt(priceStr, 10);
+            
+            if (cleanName && !isNaN(price) && cleanName.length > 2 && price > 0) {
+              const lowercaseName = cleanName.toLowerCase();
+              if (!itemsMap.has(lowercaseName)) {
+                itemsMap.set(lowercaseName, {
+                  id: lowercaseName.replace(/\s+/g, '-'),
+                  name: cleanName,
+                  basePrice: price
+                });
+              }
+            }
+          }
+        });
+      }
     }
     
-    // Remove duplicates based on name
-    const uniqueItems = allItems.filter((item, index, self) =>
-      index === self.findIndex((t) => t.name.toLowerCase() === item.name.toLowerCase())
-    );
-    
-    console.log('[parseItemsFromResponse] Total unique items found:', uniqueItems.length);
-    if (uniqueItems.length > 0) {
-      console.log('[parseItemsFromResponse] Items:', uniqueItems.map(i => `${i.name} (${i.basePrice} gold)`).join(', '));
-    }
+    // Convert Map to array of unique items
+    const uniqueItems = Array.from(itemsMap.values());
     
     // Cache the result
     itemParsingCache.set(content, uniqueItems);
@@ -150,138 +198,346 @@ export default function useGameLogic() {
     if (dealParsingCache.has(content)) {
       return dealParsingCache.get(content);
     }
-
-    console.log('[parseDealFromResponse] Processing content');
-    console.log('[parseDealFromResponse] Raw content:', content);
     
     // Fast check if content likely contains a deal block before running regex
-    if (!content.includes('```') || (!content.includes('status:') && !content.includes('price:'))) {
-      console.log('[parseDealFromResponse] No deal block markers found');
+    if (!content.includes('deal') && !content.includes('items:') && !content.includes('status:') && !content.includes('[DEAL ACCEPTED]')) {
       dealParsingCache.set(content, null);
       return null;
     }
 
-    const dealBlockMatch = content.match(/```(?:deal)?\s*([\s\S]*?)```/i);
-    if (!dealBlockMatch) {
-      console.log('[parseDealFromResponse] Tried to extract deal block but no match');
-      dealParsingCache.set(content, null);
-      return null;
-    }
-
-    console.log('[parseDealFromResponse] Found deal block:', dealBlockMatch[1]);
-    const dealText = dealBlockMatch[1].trim();
-    
     try {
-      // First try to parse the new multi-item format
-      if (dealText.includes('items:') && (dealText.includes('[') || dealText.includes('{'))) {
-        // Try to parse the JSON with some flexibility
-        let jsonText = dealText
-          .replace(/'/g, '"') // Replace single quotes with double quotes
-          .replace(/(\w+):/g, '"$1":') // Add quotes to keys
-          .replace(/,\s*}/g, '}') // Remove trailing commas
-          .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+      // Remove meta-instructions or anything outside the relevant content
+      // This helps when AIs add instruction text or explanations
+      let cleanedContent = content;
+      // Remove lines that look like AI instructions or meta-commentary
+      cleanedContent = cleanedContent.replace(/^(Here's|I would|Certainly|This response).*$/gm, '');
+      // Remove content between triple dashes (often used to separate AI instructions)
+      cleanedContent = cleanedContent.replace(/---[\s\S]*?---/g, '');
+      
+      // Try several pattern formats for deal blocks in order of most likely
+      
+      // 1. First look for ```deal {...} ``` format
+      const dealBlockMatch = cleanedContent.match(/```(?:deal)?\s*([\s\S]*?)```/i);
+      
+      // 2. If not found, look for "deal\n{...}" format (without backticks)
+      const simpleDealMatch = !dealBlockMatch ? cleanedContent.match(/deal\s*\n\s*(\{[\s\S]*?\})/i) : null;
+      
+      // 3. Direct JSON format with items array
+      const jsonMatch = (!dealBlockMatch && !simpleDealMatch) ? 
+                         cleanedContent.match(/\{[\s\S]*?"items"[\s\S]*?\}/i) : null;
+      
+      // Which format was matched?
+      const dealText = dealBlockMatch ? dealBlockMatch[1].trim() :
+                       simpleDealMatch ? simpleDealMatch[1].trim() :
+                       jsonMatch ? jsonMatch[0].trim() : null;
+      
+      // Check if the message contains deal status indicators
+      const hasDealAcceptedIndicator = cleanedContent.includes('[DEAL ACCEPTED]');
+      const hasDealRejectedIndicator = cleanedContent.includes('[NO DEAL]');
+      
+      // If no deal text was found but there's a deal acceptance indicator,
+      // try to extract information directly from the message text
+      if (!dealText && hasDealAcceptedIndicator) {
+        // Try to detect item name and price from the text
+        const itemMatch = cleanedContent.match(/([A-Za-z\s]+(?:Key|Pearl|Mirror|Stone|Amulet|Cloak|Locket|Dust|Chains|Orb))\s+(?:is|for)\s+(\d+)\s+gold/i);
         
-        // Handle cases where JSON might be malformed
-        try {
-                     // Try to extract just the items array if available
-           const itemsMatch = jsonText.match(/"items":\s*(\[[\s\S]*?\])/);
-           const statusMatch = jsonText.match(/"status":\s*"([^"]+)"/);
-           const sellerMatch = jsonText.match(/"seller":\s*"([^"]+)"/);
-                     
-          const items = itemsMatch ? JSON.parse(itemsMatch[1]) : [];
-          const status = statusMatch ? statusMatch[1] : '';
-          const seller = sellerMatch ? sellerMatch[1] : 'merchant';
+        if (itemMatch) {
+          const itemName = itemMatch[1].trim();
+          const price = parseInt(itemMatch[2], 10);
           
-          // Check if the message contains "[DEAL ACCEPTED]" indicator
-          const hasDealAcceptedIndicator = content.includes('[DEAL ACCEPTED]');
-          
+          // Create a synthetic deal object
           const result = {
             multiItem: true,
-            items: items.map((item: any) => ({
-              name: item.name || '',
-              quantity: item.quantity || 1,
-              price: item.price || 0
-            })),
-            status: hasDealAcceptedIndicator ? 'accepted' : status,
-            seller: seller
+            items: [{
+              name: itemName,
+              quantity: 1,
+              price: price
+            }],
+            status: 'accepted',
+            seller: cleanedContent.toLowerCase().includes('sell') ? 'player' : 'merchant'
           };
           
-          console.log(`[parseDealFromResponse] Extracted multi-item deal:`, result);
-          console.log(`[parseDealFromResponse] Deal accepted indicator present:`, hasDealAcceptedIndicator);
-          
+          // Cache the result
           dealParsingCache.set(content, result);
           return result;
-        } catch (err) {
-          console.log('[parseDealFromResponse] Error parsing multi-item JSON, falling back to basic format', err);
-          // Fall back to legacy format if JSON parsing fails
         }
       }
       
-      // Legacy format parsing (for backward compatibility)
-      const lines = dealText.split('\n');
-      const deal: Record<string, string> = {};
-
-      for (const line of lines) {
-        const [key, ...rest] = line.split(':');
-        if (!key || rest.length === 0) continue;
-        deal[key.trim().toLowerCase()] = rest.join(':').trim();
+      if (!dealText) {
+        dealParsingCache.set(content, null);
+        return null;
       }
-
-      // Check for quantity mention in the item name or in the message
-      let quantity = 1;
-      let itemName = deal.item || '';
       
-      // Check if there's a quantity in the item name like "2 health potions"
-      const quantityMatch = itemName.match(/^(\d+)\s+(.+)$/);
-      if (quantityMatch) {
-        quantity = parseInt(quantityMatch[1], 10);
-        itemName = quantityMatch[2].trim();
-      } else {
-        // Search the whole message for quantity mentions
-        const fullMessageQuantityMatch = content.match(/(\d+)\s+(?:of\s+)?(?:the\s+)?(?:your\s+)?(?:my\s+)?([\w\s'-]+)(?:\s+for|at)\s+(\d+)/i);
-        if (fullMessageQuantityMatch) {
-          const messageQuantity = parseInt(fullMessageQuantityMatch[1], 10);
-          const messageItem = fullMessageQuantityMatch[2].trim();
-          
-          // Only use if the item names approximately match
-          if (messageItem.toLowerCase().includes(itemName.toLowerCase()) || 
-              itemName.toLowerCase().includes(messageItem.toLowerCase())) {
-            quantity = messageQuantity;
-            // Use the more specific item name
-            if (messageItem.length > itemName.length) {
-              itemName = messageItem;
+      // First clean out any comments from the JSON
+      const commentRegex = /\/\/.*$/gm;
+      let cleanDealText = dealText.replace(commentRegex, '');
+      
+      // Try to parse the JSON with some flexibility
+      cleanDealText = cleanDealText
+        .replace(/'/g, '"') // Replace single quotes with double quotes
+        .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3') // Add quotes to keys IF UNQUOTED and after { or ,
+        .replace(/,\s*}/g, '}') // Remove trailing commas
+        .replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
+      
+      // Try to extract the items array and other properties
+      let parsedDeal;
+      try {
+        parsedDeal = JSON.parse(cleanDealText);
+      } catch (e) {
+        console.log("[parseDealFromResponse] Failed to parse JSON:", e);
+        console.log("[parseDealFromResponse] Attempted to parse:", cleanDealText);
+        
+        // Try to extract just the items array if available
+        const itemsMatch = cleanDealText.match(/"items":\s*(\[[\s\S]*?\])/);
+        const statusMatch = cleanDealText.match(/"status":\s*"([^"]+)"/);
+        const sellerMatch = cleanDealText.match(/"seller":\s*"([^"]+)"/);
+        
+        let items = [];
+        if (itemsMatch) {
+          try {
+            items = JSON.parse(itemsMatch[1]);
+          } catch (err) {
+            console.log("[parseDealFromResponse] Failed to parse items array:", err);
+            
+            // Try even more aggressive parsing - extract just name/price pairs from items section
+            const nameMatch = cleanDealText.match(/"name":\s*"([^"]+)"/);
+            const priceMatch = cleanDealText.match(/"price":\s*(\d+)/);
+            const quantityMatch = cleanDealText.match(/"quantity":\s*(\d+)/);
+            
+            if (nameMatch && priceMatch) {
+              items = [{
+                name: nameMatch[1],
+                quantity: quantityMatch ? parseInt(quantityMatch[1], 10) : 1,
+                price: parseInt(priceMatch[1], 10)
+              }];
+            } else {
+              items = [];
             }
           }
+        } else {
+          // Manually check for item objects in the text
+          const itemPattern = /"name":\s*"([^"]+)"[\s\S]*?"quantity":\s*(\d+)[\s\S]*?"price":\s*(\d+)/g;
+          const itemMatches = Array.from(cleanDealText.matchAll(itemPattern));
+          
+          items = itemMatches.map(match => ({
+            name: match[1],
+            quantity: parseInt(match[2], 10),
+            price: parseInt(match[3], 10)
+          }));
+          
+          // If that didn't find anything, try a more relaxed pattern
+          if (items.length === 0) {
+            const relaxedItemPattern = /"name":\s*"([^"]+)"[\s\S]*?"price":\s*(\d+)/g;
+            const relaxedMatches = Array.from(cleanDealText.matchAll(relaxedItemPattern));
+            
+            items = relaxedMatches.map(match => ({
+              name: match[1],
+              quantity: 1,
+              price: parseInt(match[2], 10)
+            }));
+          }
         }
+        
+        parsedDeal = {
+          items: items,
+          status: statusMatch ? statusMatch[1] : 'pending',
+          seller: sellerMatch ? sellerMatch[1] : 'merchant'
+        };
       }
-
-      // Check if the message contains "[DEAL ACCEPTED]" indicator
-      const hasDealAcceptedIndicator = content.includes('[DEAL ACCEPTED]');
-
+      
+      // Determine status based on both JSON and text indicators
+      let status = parsedDeal.status || 'pending';
+      
+      if (hasDealAcceptedIndicator) {
+        status = 'accepted';
+      } else if (hasDealRejectedIndicator) {
+        status = 'rejected';
+      }
+      
+      // Normalize item names - convert them to proper case and remove extra spaces
+      if (Array.isArray(parsedDeal.items)) {
+        parsedDeal.items = parsedDeal.items.map((item: any) => {
+          if (typeof item.name === 'string') {
+            // Convert first letter of each word to uppercase, others to lowercase
+            item.name = item.name.replace(/\b\w+/g, (word: string) => 
+              word.charAt(0).toUpperCase() + word.substring(1).toLowerCase()
+            ).trim();
+          }
+          return item;
+        });
+      }
+      
       const result = {
-        multiItem: false,
-        items: [{
-          name: itemName,
-          quantity: quantity,
-          price: parseInt(deal.price) || 0
-        }],
-        // Override status to 'accepted' if the "[DEAL ACCEPTED]" indicator is present
-        status: hasDealAcceptedIndicator ? 'accepted' : deal.status,
-        seller: deal.seller || 'merchant' // Default to 'merchant' if not specified
+        multiItem: true,
+        items: Array.isArray(parsedDeal.items) ? parsedDeal.items.map((item: any) => ({
+          name: item.name || '',
+          quantity: item.quantity || 1,
+          price: item.price || 0
+        })) : [],
+        status: status,
+        seller: parsedDeal.seller || 'merchant'
       };
-
-      console.log(`[parseDealFromResponse] Extracted single-item deal:`, result);
-      console.log(`[parseDealFromResponse] Deal accepted indicator present:`, hasDealAcceptedIndicator);
-
+      
       // Cache the result
       dealParsingCache.set(content, result);
       return result;
     } catch (error) {
-      console.error('[parseDealFromResponse] Error parsing deal:', error);
+      console.log("[parseDealFromResponse] Error parsing deal:", error);
       dealParsingCache.set(content, null);
       return null;
     }
   }, []);
+
+  // Parse UI actions from merchant responses
+  const parseUIActionsFromResponse = useCallback((content: string) => {
+    // Return cached result if we've already parsed this content
+    if (uiActionParsingCache.has(content)) {
+      return uiActionParsingCache.get(content) || [];
+    }
+
+    // Fast check if content likely contains a UI action
+    if (!content.includes('ui_action')) {
+      uiActionParsingCache.set(content, []);
+      return [];
+    }
+    
+    // Clean the input text by removing any AI instruction text and internal notes
+    let cleanContent = content;
+    // Remove content between --- markers (often used for AI instructions)
+    cleanContent = cleanContent.replace(/---[\s\S]*?---/g, '');
+    // Remove lines starting with common AI instruction markers
+    cleanContent = cleanContent.replace(/^(Here's|I would|Certainly|This response|As Tenshi).*$/gm, '');
+    
+    const actions: Array<{ui_action: string, [key: string]: any}> = [];
+    
+    // Match full JSON objects that contain "ui_action"
+    const uiActionMatches = cleanContent.match(/\{[^{}]*"ui_action"[^{}]*\}/g) || 
+                           cleanContent.match(/\{[^{}]*ui_action[^{}]*\}/g);
+    
+    if (uiActionMatches) {
+      for (const jsonText of uiActionMatches) {
+        try {
+          // Try to parse the JSON object
+          const cleanedJson = jsonText
+            .replace(/'/g, '"') // Replace single quotes with double quotes
+            .replace(/(\w+):/g, '"$1":'); // Add quotes to keys
+          
+          const jsonObject = JSON.parse(cleanedJson);
+          
+          // Validate it has ui_action property
+          if (jsonObject.ui_action) {
+            actions.push(jsonObject);
+          }
+        } catch (err) {
+          console.log('[parseUIActionsFromResponse] Failed to parse UI action:', jsonText, err);
+          
+          // Attempt more aggressive parsing with regex
+          try {
+            const actionTypeMatch = jsonText.match(/ui_action"?\s*:\s*"?([^",\s}]+)/i);
+            if (actionTypeMatch) {
+              const action: {ui_action: string, open?: boolean, itemId?: string} = { 
+                ui_action: actionTypeMatch[1]
+              };
+              
+              // Try to extract other common properties
+              const openMatch = jsonText.match(/open"?\s*:\s*(\w+)/i);
+              if (openMatch) {
+                action.open = openMatch[1].toLowerCase() === 'true';
+              }
+              
+              const itemIdMatch = jsonText.match(/itemId"?\s*:\s*"?([^",\s}]+)/i);
+              if (itemIdMatch) {
+                action.itemId = itemIdMatch[1];
+              }
+              
+              actions.push(action);
+            }
+          } catch (fallbackErr) {
+            // Silent fail for invalid JSON after fallback attempt
+          }
+        }
+      }
+    }
+    
+    // Cache the result
+    uiActionParsingCache.set(content, actions);
+    
+    return actions;
+  }, []);
+
+  // Handle UI actions from merchant responses
+  const handleUIActions = useCallback((actions: any[]) => {
+    if (!actions || actions.length === 0) return;
+    
+    // Sort actions so toggle_shop comes before focus_item
+    const sortedActions = [...actions].sort((a, b) => {
+      // Make shop toggles happen first
+      if (a.ui_action === 'toggle_shop' && b.ui_action !== 'toggle_shop') return -1;
+      if (b.ui_action === 'toggle_shop' && a.ui_action !== 'toggle_shop') return 1;
+      return 0;
+    });
+    
+    // Process each action with a slight delay for better UI response
+    sortedActions.forEach((action, index) => {
+      // Stagger actions slightly for better animation flow
+      setTimeout(() => {
+        switch (action.ui_action) {
+          case 'toggle_shop':
+            // Toggle the shop UI
+            if (typeof action.open === 'boolean') {
+              useGameStore.getState().setIsShopOpen(action.open);
+              
+              // If we're closing the shop, also clear selection
+              if (!action.open) {
+                setSelectedItem(null);
+              }
+            }
+            break;
+            
+          case 'focus_item':
+            // Focus on a specific item in the shop
+            if (action.itemId) {
+              // First make sure shop is open
+              useGameStore.getState().setIsShopOpen(true);
+              
+              // Find the item by ID and select it
+              // Try exact match first
+              let itemToFocus = currentMerchantItems.find(item => item.id === action.itemId);
+              
+              // If not found, try a fuzzy match (item ID might have slight differences)
+              if (!itemToFocus) {
+                const normalizedItemId = action.itemId.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                
+                itemToFocus = currentMerchantItems.find(item => {
+                  const normalizedId = item.id.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                  return normalizedId === normalizedItemId || 
+                         normalizedId.includes(normalizedItemId) || 
+                         normalizedItemId.includes(normalizedId);
+                });
+              }
+              
+              // If still not found, try matching by name
+              if (!itemToFocus) {
+                // Convert the itemId back to a potential name
+                const possibleName = action.itemId.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                
+                itemToFocus = currentMerchantItems.find(item => {
+                  return item.name.toLowerCase().includes(possibleName.toLowerCase()) ||
+                         possibleName.toLowerCase().includes(item.name.toLowerCase());
+                });
+              }
+              
+              if (itemToFocus) {
+                setSelectedItem(itemToFocus);
+                setCurrentOffer(itemToFocus.basePrice);
+                setInventoryItemToSell(null); // Clear any selling items
+              }
+            }
+            break;
+        }
+      }, index * 100); // Stagger actions by 100ms
+    });
+  }, [currentMerchantItems, setCurrentOffer, setSelectedItem, setInventoryItemToSell]);
 
   // Initialize a merchant if they haven't been initialized yet
   const initializeMerchant = useCallback(async (merchantId: string) => {
@@ -316,10 +572,12 @@ export default function useGameLogic() {
         merchantId
       );
       
-      // Send the merchant prompt
+      // Send the merchant prompt and initialization prompt
       console.log(`[initializeMerchant] Sending initial merchant prompt to ${merchantId}`);
+      
+      // Send the initialization prompt
       const response = await chatWithMerchant(
-        MERCHANT_PROMPT,
+        getInitializePrompt(merchantId),
         {
           gold,
           inventory,
@@ -454,8 +712,6 @@ export default function useGameLogic() {
     }
 
     try {
-      console.log(`[handleSendMessage] Sending message to ${currentMerchantId}:`, currentMessage);
-      
       const response = await chatWithMerchant(
         currentMessage,
         {
@@ -468,45 +724,25 @@ export default function useGameLogic() {
 
       if (response.success) {
         if (!currentMessage.startsWith('!') || currentMessage === '!start') {
-          // Add merchant response to chat history
-          console.log(`[handleSendMessage] Successful response from ${currentMerchantId}:`, response.message);
-          
           // Normalize line breaks to handle potential inconsistencies
           const normalizedMessage = response.message.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          let finalMessageContent = normalizedMessage; // Initialize with the base message
           
-          addMessageToMerchantHistory(currentMerchantId, { 
-            role: 'merchant', 
-            content: normalizedMessage 
-          });
+          // Process the message in a consistent order to avoid multiple passes
           
-          setIsTyping(true);
-          setLastParsedMessage(normalizedMessage);
-          
-          // Only parse items and deals once per message
-          const newItems = parseItemsFromResponse(normalizedMessage);
-          console.log(`[handleSendMessage] Scanning for items from ${currentMerchantId}, found:`, newItems.length);
-          
-          if (newItems.length > 0) {
-            console.log(`[handleSendMessage] New items discovered from ${currentMerchantId}:`, newItems);
-            setHasNewItems(true);
-            // Reset notification after 3 seconds
-            setTimeout(() => setHasNewItems(false), 3000);
+          // 1. Parse and handle UI actions first
+          const uiActions = parseUIActionsFromResponse(normalizedMessage);
+          if (uiActions.length > 0) {
+            handleUIActions(uiActions);
           }
           
-          // Add items to current merchant's wares
-          newItems.forEach(item => {
-            addItemToMerchantWares(currentMerchantId, item);
-            // Also update legacy state for compatibility
-            addDiscoveredItem(item);
-          });
-
-          // Handle deal response if present
+          // 2. Handle deal response if present
           const dealResponse = parseDealFromResponse(normalizedMessage);
+          
           if (dealResponse) {
-            console.log(`[handleSendMessage] Processed deal from ${currentMerchantId}:`, dealResponse);
-            
+            let dealStatusMarker = '';
             if (dealResponse.status === 'accepted' || (dealResponse.status === 'pending' && response.message.includes('[DEAL ACCEPTED]'))) {
-              console.log(`[handleSendMessage] Deal with ${currentMerchantId} is accepted, processing transaction`);
+              dealStatusMarker = `\n\n<!-- DEAL_STATUS: accepted -->`;
               
               if (dealResponse.seller === 'player') {
                 // When the player is the seller (player sells to merchant)
@@ -515,13 +751,44 @@ export default function useGameLogic() {
                 // When the merchant is the seller (player buys from merchant)
                 handleChatBuyTransaction(dealResponse);
               }
+            } else if (dealResponse.status === 'rejected') {
+              dealStatusMarker = `\n\n<!-- DEAL_STATUS: rejected -->`;
             } else {
-              console.log(`[handleSendMessage] Deal with ${currentMerchantId} was rejected or still pending, status:`, dealResponse.status);
+              dealStatusMarker = `\n\n<!-- DEAL_STATUS: pending -->`;
+            }
+            
+            finalMessageContent += dealStatusMarker; // Append the deal status marker
+          }
+
+          // 3. Add merchant response to chat history
+          addMessageToMerchantHistory(currentMerchantId, { 
+            role: 'merchant', 
+            content: finalMessageContent
+          });
+          
+          setIsTyping(true);
+          setLastParsedMessage(finalMessageContent);
+          
+          // 4. Parse items last, after everything else is processed
+          // Only do this if there was no deal (deals already handle item transfers)
+          if (!dealResponse) {
+            const newItems = parseItemsFromResponse(normalizedMessage);
+            
+            if (newItems.length > 0) {
+              setHasNewItems(true);
+              // Reset notification after 3 seconds
+              setTimeout(() => setHasNewItems(false), 3000);
+              
+              // Add items to current merchant's wares
+              newItems.forEach(item => {
+                addItemToMerchantWares(currentMerchantId, item);
+                // Also update legacy state for compatibility
+                addDiscoveredItem(item);
+              });
             }
           }
         }
       } else {
-        console.log(`[handleSendMessage] Response from ${currentMerchantId} not successful`);
         if (!currentMessage.startsWith('!')) {
           addMessageToMerchantHistory(currentMerchantId, {
             role: 'merchant',
@@ -530,7 +797,6 @@ export default function useGameLogic() {
         }
       }
     } catch (error) {
-      console.error(`[handleSendMessage] Error handling message to ${currentMerchantId}:`, error);
       if (!currentMessage.startsWith('!')) {
         addMessageToMerchantHistory(currentMerchantId, {
           role: 'merchant',
@@ -568,6 +834,25 @@ export default function useGameLogic() {
       const itemName = itemDeal.name.trim();
       const quantity = itemDeal.quantity || 1;
       const offerAmount = itemDeal.price || 0;
+      
+      // Check if this is a gold transfer rather than an actual item
+      // (e.g., "500 gold" which should add 500 gold to the player rather than adding an item)
+      const goldTransferMatch = itemName.match(/^(\d+)\s+gold$/i);
+      if (goldTransferMatch) {
+        const goldAmount = parseInt(goldTransferMatch[1], 10);
+        if (!isNaN(goldAmount) && goldAmount > 0) {
+          console.log(`[handleChatBuyTransaction] Detected gold transfer: +${goldAmount} gold`);
+          
+          // Add the gold to the player's balance instead of deducting it
+          setGold(gold + goldAmount);
+          
+          // Display transaction feedback
+          displayTransactionResult(`You received ${goldAmount} gold!`, 'success');
+          
+          // Skip the rest of the processing for this item
+          continue;
+        }
+      }
       
       const foundItem = currentMerchantItems.find(
         item => item.name.toLowerCase() === itemName.toLowerCase()
@@ -673,6 +958,25 @@ export default function useGameLogic() {
       const quantity = itemDeal.quantity || 1;
       const saleAmount = itemDeal.price || 0;
       
+      // Check if this is a gold transfer rather than an actual item
+      // (e.g., "500 gold" which would be a direct gold payment)
+      const goldTransferMatch = itemName.match(/^(\d+)\s+gold$/i);
+      if (goldTransferMatch) {
+        const goldAmount = parseInt(goldTransferMatch[1], 10);
+        if (!isNaN(goldAmount) && goldAmount > 0) {
+          console.log(`[handleChatSellTransaction] Detected gold transfer: +${goldAmount} gold`);
+          
+          // Add the gold to the player's balance
+          setGold(gold + saleAmount);
+          
+          // Display transaction feedback
+          displayTransactionResult(`You received ${saleAmount} gold!`, 'success');
+          
+          // Skip the rest of the processing for this item
+          continue;
+        }
+      }
+      
       // Find matching items in inventory
       const matchingItems = inventory.filter(
         item => item.name.toLowerCase() === itemName.toLowerCase()
@@ -745,6 +1049,16 @@ export default function useGameLogic() {
 
   // Initialize the current merchant when it changes or on initial load
   useEffect(() => {
+    // Don't automatically initialize merchants on page load
+    // Only do so when they are explicitly selected by the user
+    const inDirectoryView = currentMerchantId === DEFAULT_MERCHANT_ID;
+    
+    // If we're in directory view, don't initialize any merchants yet
+    if (inDirectoryView) {
+      return;
+    }
+    
+    // Only initialize the merchant if it hasn't been initialized yet
     if (!initializedMerchants[currentMerchantId]) {
       initializeMerchant(currentMerchantId);
     } else {
@@ -819,6 +1133,7 @@ export default function useGameLogic() {
     merchants,
     setCurrentMerchantId,
     currentMerchantItems,
-    currentMerchantChatHistory
+    currentMerchantChatHistory,
+    parseUIActionsFromResponse,  // Expose the function for testing if needed
   };
 } 

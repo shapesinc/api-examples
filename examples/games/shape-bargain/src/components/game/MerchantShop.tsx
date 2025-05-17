@@ -142,7 +142,7 @@ export default function MerchantShop({
                               size="sm"
                               className="font-secondary"
                               onClick={() => {
-                                onSellItem(Math.floor(item.basePrice * 0.8));
+                                onSellItem(Math.floor(item.basePrice * 1.2));
                                 onToggle();
                               }}
                             >
@@ -152,11 +152,11 @@ export default function MerchantShop({
                               size="sm"
                               className="font-secondary"
                               onClick={() => {
-                                onSellItem(Math.floor(item.basePrice * 0.9));
+                                onSellItem(Math.floor(item.basePrice * 1));
                                 onToggle();
                               }}
                             >
-                              Ask for 110%
+                              Ask for 100%
                             </Button>
                           </div>
                         )}
