@@ -188,7 +188,6 @@ async function startServer() {
 }
 
 // --- Graceful Shutdown ---
-// Handle SIGTERM (e.g., from process managers like PM2)
 process.on("SIGTERM", async () => {
   console.log("Received SIGTERM. Shutting down gracefully.");
   
