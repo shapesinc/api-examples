@@ -109,13 +109,15 @@ Shapes now support the following commands:
 
 ## Advanced Features
 
-| Feature | Details |
-|---------|---------|
-| Vision Support | Send OpenAI API compatible image_url with user messages |
-| Tool Calling | Shapes now support tool calling and MCP functionality |
-| Voice Features | Free voice for all shapes (custom or pre-made voices via shapes.inc) |
-| Voice Configuration | Option to disable voice transcripts (set via shapes.inc) |
-| Voice Formatting | Improved formatting for voice URLs with new line separation |
+| Feature                    | Details                                                                 |
+| -------------------------- | ----------------------------------------------------------------------- |
+| Vision Support             | Send OpenAI API-compatible `image_url` with user messages.              |
+| Voice Recognition          | Send OpenAI API-compatible `audio_url` with user messages.              |
+| Tool Calling               | Shapes now support tool calling and MCP functionality.                  |
+| Voice Features             | Free voice for all shapes (custom or pre-made voices via `shapes.inc`). |
+| Voice Configuration        | Option to disable voice transcripts (set via `shapes.inc`).             |
+| Voice Formatting           | Improved formatting for voice URLs with newline separation.             |
+| Authentication with Shapes | You can now authenticate with `shapes.inc` via your app.                |
 
 
 ## API Multimodal Support
