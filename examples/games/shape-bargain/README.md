@@ -4,7 +4,7 @@
 
 'Merchant of Venice' is a Next.js-based merchant bargaining game built with the shapes-api. In this game, you negotiate with various merchants to buy and sell items, managing your inventory and gold to make the best deals possible.
 
-You can play a live demo right here: [https://shapes-merchant-game.vercel.app/](https://shapes-merchant-game.vercel.app/)
+You can play a live demo right here: [https://www.arguewithshapes.com/](https://www.arguewithshapes.com/)
 
 If you wish to train your own shape, check out examples.md for fine-tune chats examples!
 
