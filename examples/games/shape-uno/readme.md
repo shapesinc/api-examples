@@ -18,6 +18,14 @@ a minimalist rock-paper-scissors game built with Shapes API.
 clone it then:
 ```bash
 cd shape-uno
+```
+edit `.env`
+```
+SHAPES_API_KEY=yourkey
+SHAPES_USERNAME=shapeusername
+```
+run
+```
 npm install
 npm run dev
 ```
