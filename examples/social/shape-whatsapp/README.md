@@ -82,6 +82,20 @@ A WhatsApp bot powered by the Shapes API that provides AI-powered conversational
 
 © 2025 Shapes Inc. All rights reserved.
 
+## Contributor
+
+Thanks to [hugrodi](https://github.com/hugrodi) for contributing to the improvement of the bot.  
+Their contributions enhanced several functions, including:
+
+- `FREE_WILL_INSTRUCTIONS`
+- `LEVEL_OF_FREE_WILL`
+- `DAILY_LEVEL_OF_FREE_WILL`
+- `DAILY_TIME_CHECK`
+- `FAVORITE_PEOPLE`
+- `KEYWORDS_OF_INTEREST`
+
+
+
 ## Disclaimer
 
 This is an example application and should be used responsibly and in compliance with WhatsApp's terms of service.
