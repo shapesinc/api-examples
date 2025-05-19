@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roast.SaaS — Get Roasted by Shape</title>
+  <style>
+    body {
+      background: #0d0d0d;
+      font-family: 'Segoe UI', sans-serif;
+      color: #f1f1f1;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+
+    .input-section,
+    .output-section,
+    .history-section {
+      background: #1e1e1e;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 16px;
+      background: #1f1f1f;
+      color: white;
+      font-size: 1rem;
+      border: 1px solid #333;
+      border-radius: 10px;
+      resize: none;
+      margin-bottom: 20px;
+    }
+
+    .emoji-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .emoji-select button {
+      font-size: 1.4rem;
+      background: #2b2b2b;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .mood {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+
+    .roast-button {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.1rem;
+      background: linear-gradient(90deg, #ff4b2b, #ff416c);
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(255, 65, 108, 0.3);
+    }
+
+    .chatbubble {
+      background: #292929;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .chatbubble small {
+      display: block;
+      color: #aaa;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      background: #2b2b2b;
+      border: none;
+      color: #ccc;
+      padding: 8px 16px;
+      margin: 0 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: #888;
+      text-align: center;
+    }
+
+    .footer-note a {
+      color: #ff7575;
+      text-decoration: none;
+    }
+
+    .footer-note a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Roast.SaaS</h1>
+    <p class="subtitle">Let Shape roast your worst confessions using AI.</p>
+
+    <section class="input-section">
+      <textarea id="userInput" placeholder="Type something roastable..."></textarea>
+      <div class="emoji-select">
+        <button data-emoji="😂">😂</button>
+        <button data-emoji="💀">💀</button>
+        <button data-emoji="🤓">🤓</button>
+        <button data-emoji="😭">😭</button>
+        <button data-emoji="🧠">🧠</button>
+      </div>
+      <p class="mood">Mood: <span id="selectedEmoji">😂</span></p>
+      <button class="roast-button" onclick="sendRoast()">🔥 Roast Me</button>
+      <p class="footer-note">© 2025 Powered by Shapes API — Built by <a href="https://nextgencoders.xyz" target="_blank">NextGenCoders</a></p>
+    </section>
+
+    <section class="output-section" id="roastResult"></section>
+
+    <section class="history-section">
+      <h2>📜 Roast History</h2>
+      <div id="historyBox"></div>
+      <div class="pagination">
+        <button onclick="prevPage()">⬅ Prev</button>
+        <button onclick="nextPage()">Next ➡</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let currentEmoji = '😂';
+    let currentPage = 0;
+    let allHistory = [];
+
+    function setEmoji(e) {
+      currentEmoji = e;
+      document.getElementById('selectedEmoji').innerText = e;
+    }
+
+    document.querySelectorAll('.emoji-select button').forEach(btn => {
+      btn.onclick = () => setEmoji(btn.dataset.emoji);
+    });
+
+    async function sendRoast() {
+      const input = document.getElementById('userInput').value.trim();
+      if (!input) return alert("Type something first!");
+
+      document.getElementById("roastResult").innerHTML = `<div class="chatbubble">👻 Shape is roasting you...</div>`;
+      document.getElementById("roastResult").style.display = 'block';
+
+      const res = await fetch("/api/roast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input, emoji: currentEmoji })
+      });
+
+      const data = await res.json();
+
+      const roastObj = {
+        text: input,
+        emoji: currentEmoji,
+        roast: data.roast
+      };
+
+      allHistory.unshift(roastObj);
+      localStorage.setItem("roastHistory", JSON.stringify(allHistory));
+
+      document.getElementById("roastResult").innerHTML = `
+        <div class="chatbubble">
+          <small>${currentEmoji} You:</small>
+          ${data.roast}
+        </div>
+      `;
+
+      showPage(currentPage);
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem("roastHistory");
+      if (saved) {
+        allHistory = JSON.parse(saved);
+      }
+    }
+
+    function loadHistory() {
+      loadFromLocal();
+      showPage(currentPage);
+    }
+
+    function showPage(page) {
+      const perPage = 3;
+      const start = page * perPage;
+      const end = start + perPage;
+      const history = allHistory.slice(start, end);
+
+      const box = document.getElementById("historyBox");
+      box.innerHTML = "";
+
+      history.forEach((item, i) => {
+        box.innerHTML += `
+          <div class="chatbubble">
+            <small>${item.emoji} ${item.text}</small>
+            ${item.roast}
+          </div>`;
+      });
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(allHistory.length / 3);
+      if (currentPage < totalPages - 1) {
+        currentPage++;
+        showPage(currentPage);
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        showPage(currentPage);
+      }
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>
+
