@@ -2,7 +2,7 @@
 
 This example demonstrated how to use tools with your shape.
 
-**NOTE: Tools are temporarily disabled, so the example will not work until the feature is re-enabled.**
+**NOTE: Tools are in early beta, things might break. Proceed with caution.**
 
 ## Prerequisites
 
