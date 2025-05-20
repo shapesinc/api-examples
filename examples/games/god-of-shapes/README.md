@@ -13,7 +13,25 @@ ShapesGod is an interactive web application where you can combine elemental emoj
 - 🔒 **Authentication** for personalized sessions
 
 ---
+## 🔮 AI-Powered Fusion Engine
+ShapesGod uses the Shapes API to generate new elemental fusions dynamically. When you combine two emojis, the app sends them to the shapesinc/elementcreatorv2 model, which returns:
 
+A creative fusion name (e.g., combining "fire" and "water" might yield "steam")
+
+A single emoji that represents the fusion
+
+This approach allows for endless, imaginative combinations without relying on a predefined list. It keeps the gameplay fresh and encourages exploration.
+
+### 🌟 Why Use the Shapes API?
+
+- **Dynamic Fusion Generation:**  
+    No static lists—every combination is generated in real time, making each discovery unique and interactive.
+
+- **Effortless Scalability:**  
+    The system automatically supports new emoji combinations as users experiment, with no manual updates required.
+
+- **Enhanced User Engagement:**  
+    The surprise of novel fusions keeps gameplay fresh and encourages creative exploration.
 ## 🛠️ Getting Started
 
 1. **Install dependencies:**
