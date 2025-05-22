@@ -12,9 +12,9 @@ Watch the demo video:
 
 - Python technical interview with Carmack (John Carmack inspired personality)
 - Structured 3-question interview format with pass/fail evaluation
-- Code editor for solving coding problems
+- Code editor for solving coding problems (support for Python, C, C++, and JavaScript)
 - Real-time interview simulation with typing indicators
-- Voice mode with audio input/output support via Cloudinary (no FFmpeg required)
+- Voice mode with audio input/output support via Cloudinary
 - Modern dark-themed user interface
 - Responsive design
 
