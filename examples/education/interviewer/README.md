@@ -2,6 +2,12 @@
 
 A web application that simulates Python technical interviews using the Shapes API with Carmack. Practice your Python interview skills with an AI interviewer that provides expert technical feedback.
 
+## Demo
+
+Watch the demo video:
+
+[View Demo Video](https://drive.google.com/file/d/1SnbHBJd61DwKM5JMAEAytU_FgautJgNn/view?usp=sharing)
+
 ## Features
 
 - Python technical interview with Carmack (John Carmack inspired personality)
@@ -82,6 +88,3 @@ Each interview session follows a structured format:
 
 This format provides a realistic interview experience and helps you practice handling a complete technical interview scenario.
 
-## Note
-
-Make sure to keep your Shapes API key secure and never commit it to version control. 
