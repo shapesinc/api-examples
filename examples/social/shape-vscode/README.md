@@ -54,16 +54,20 @@ shape-vscode/
    npm install
    ```
 
-2. **Launch Extension Development Host**
+   ###IMPORTANT
+   When developing a VS Code extension, you must open the folder containing the package.json directly as the workspace root in VS Code.
+   Hence make sure that the folder shape-vscode is opened as the workspace root in VS Code
+
+3. **Launch Extension Development Host**
 
     Open extension.js and press F5, select VS Code Extension Development
 
-3. **Open the Shapes Chat window**
+4. **Open the Shapes Chat window**
 
     Press Ctrl + Shift + P, (or ⇧⌘P on macOS) to open the Command Palette.  
     Search for and run: Shapes Chat: Open Chat
 
-4. **Using Shapes Chat**
+5. **Using Shapes Chat**
 
     - Click on + to create a new chat and enter the shape username (Note that currently you can talk to a shape in one chat only)
 
