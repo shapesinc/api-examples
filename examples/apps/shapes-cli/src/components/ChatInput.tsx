@@ -11,6 +11,7 @@ interface QueuedImage {
 interface ChatInputProps {
   onSend: (content: string, images?: string[]) => void;
   images: QueuedImage[];
+  enabledToolsCount: number;
   shapeName: string;
   authStatus: string;
   endpoint: string;
@@ -19,7 +20,7 @@ interface ChatInputProps {
   onEscape?: () => void;
 }
 
-export const ChatInput = ({ onSend, images, shapeName, authStatus, endpoint, terminalWidth, inputMode = 'normal', onEscape }: ChatInputProps) => {
+export const ChatInput = ({ onSend, images, enabledToolsCount, shapeName, authStatus, endpoint, terminalWidth, inputMode = 'normal', onEscape }: ChatInputProps) => {
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -86,6 +87,9 @@ export const ChatInput = ({ onSend, images, shapeName, authStatus, endpoint, ter
           {renderShapeName()}
           {images.length > 0 && (
             <Text color="yellow"> | Images: {images.length}</Text>
+          )}
+          {enabledToolsCount > 0 && (
+            <Text color="green"> | Tools: {enabledToolsCount}</Text>
           )}
         </Box>
         <Box>

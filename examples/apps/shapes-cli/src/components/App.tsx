@@ -10,11 +10,16 @@ import { MessageList } from './MessageList.js';
 import { renderError } from '../utils/rendering.js';
 import { config, initConfig } from '../config.js';
 import open from 'open';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
 
 interface Message {
-  type: 'user' | 'assistant' | 'system';
+  type: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   images?: string[];
+  tool_calls?: any[];
+  tool_call_id?: string;
 }
 
 interface ChatTool {
@@ -29,12 +34,47 @@ interface QueuedImage {
   size: number;
 }
 
+interface Tool {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  enabled: boolean;
+}
+
+const TOOLS_STATE_FILE = path.join(os.homedir(), '.shapes-cli', 'tools-state.json');
+
+const saveToolsState = async (tools: Tool[]): Promise<void> => {
+  try {
+    const dir = path.dirname(TOOLS_STATE_FILE);
+    await fs.mkdir(dir, { recursive: true });
+    const toolsState = tools.reduce((acc, tool) => {
+      acc[tool.name] = tool.enabled;
+      return acc;
+    }, {} as Record<string, boolean>);
+    await fs.writeFile(TOOLS_STATE_FILE, JSON.stringify(toolsState), 'utf-8');
+  } catch (error) {
+    // Ignore save errors to not break the app
+    console.warn('Failed to save tools state:', error);
+  }
+};
+
+const loadToolsState = async (): Promise<Record<string, boolean>> => {
+  try {
+    const data = await fs.readFile(TOOLS_STATE_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    // Return empty state if file doesn't exist or is invalid
+    return {};
+  }
+};
+
 export const App = () => {
   const { stdout } = useStdout();
   const [messages, setMessages] = useState<Message[]>([]);
   const [client, setClient] = useState<OpenAI | null>(null);
   const [tools, setTools] = useState<unknown[]>([]);
   const [images, setImages] = useState<QueuedImage[]>([]);
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
   const [shapeName, setShapeName] = useState<string>('');
   const [authStatus, setAuthStatus] = useState<string>('');
   const [endpoint, setEndpoint] = useState<string>('');
@@ -84,11 +124,39 @@ export const App = () => {
         setEndpoint(discoveredConfig.apiUrl);
 
         // Load tools and plugins
-        const [availableTools] = await Promise.all([
+        const [loadedTools] = await Promise.all([
           loadTools(),
           loadPlugins(),
         ]);
-        setTools(availableTools);
+        setTools(loadedTools);
+        
+        // Initialize test tools with saved state
+        const savedToolsState = await loadToolsState();
+        const testTools: Tool[] = [
+          {
+            name: 'ping',
+            description: 'Simple ping tool that returns pong',
+            parameters: {
+              type: 'object',
+              properties: {},
+              required: []
+            },
+            enabled: savedToolsState['ping'] ?? false
+          },
+          {
+            name: 'echo',
+            description: 'Echo tool that returns the input message',
+            parameters: {
+              type: 'object',
+              properties: {
+                message: { type: 'string', description: 'Message to echo' }
+              },
+              required: ['message']
+            },
+            enabled: savedToolsState['echo'] ?? false
+          }
+        ];
+        setAvailableTools(testTools);
       } catch (err) {
         setError((err as Error).message);
       }
@@ -168,29 +236,208 @@ export const App = () => {
           }),
           { role: 'user' as const, content: messageContent },
         ],
-        tools: tools.map(tool => ({
+        tools: availableTools.filter(t => t.enabled).map(tool => ({
           type: 'function' as const,
           function: {
-            name: (tool as ChatTool).name,
-            description: (tool as ChatTool).description,
-            parameters: (tool as ChatTool).parameters,
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
           },
         })),
       };
 
       const response = await client.chat.completions.create(request);
-      const assistantMessage: Message = {
-        type: 'assistant',
-        content: response.choices[0]?.message?.content || '',
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Check for tool calls
+      if (response.choices?.[0]?.message?.tool_calls) {
+        const toolCalls = response.choices[0].message.tool_calls;
+        
+        // Add assistant message with tool calls
+        const assistantMessage: Message = {
+          type: 'assistant',
+          content: response.choices[0]?.message?.content || '',
+          tool_calls: toolCalls
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Process each tool call
+        const toolResults: Message[] = [];
+        for (const toolCall of toolCalls) {
+          const result = await handleToolCall(toolCall);
+          toolResults.push({
+            type: 'tool',
+            content: result,
+            tool_call_id: toolCall.id
+          });
+        }
+        
+        // Add tool result messages
+        setMessages(prev => [...prev, ...toolResults]);
+        
+        // Make second API call with tool results
+        const updatedMessages = [
+          ...messages.map(msg => {
+            if (msg.type === 'user' && msg.images && msg.images.length > 0) {
+              return {
+                role: 'user' as const,
+                content: [
+                  { type: "text", text: msg.content },
+                  ...msg.images.map(img => ({
+                    type: "image_url",
+                    image_url: { url: img }
+                  }))
+                ]
+              };
+            } else {
+              return {
+                role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+                content: msg.content,
+              };
+            }
+          }),
+          { role: 'user' as const, content: messageContent },
+          { 
+            role: 'assistant' as const, 
+            content: response.choices[0]?.message?.content || '',
+            tool_calls: toolCalls.map(tc => ({
+              id: tc.id,
+              type: tc.type,
+              function: {
+                name: tc.function.name,
+                arguments: tc.function.arguments,
+              },
+            }))
+          },
+          ...toolResults.map(tr => ({
+            role: 'tool' as const,
+            content: tr.content,
+            tool_call_id: tr.tool_call_id!
+          }))
+        ];
+        
+        const secondResponse = await client.chat.completions.create({
+          model: config.model,
+          messages: updatedMessages,
+          tools: availableTools.filter(t => t.enabled).map(tool => ({
+            type: 'function' as const,
+            function: {
+              name: tool.name,
+              description: tool.description,
+              parameters: tool.parameters,
+            },
+          })),
+        });
+        
+        // Check if second response also has tool calls
+        if (secondResponse.choices?.[0]?.message?.tool_calls) {
+          const secondToolCalls = secondResponse.choices[0].message.tool_calls;
+          
+          // Add assistant message with second tool calls
+          const secondAssistantMessage: Message = {
+            type: 'assistant',
+            content: secondResponse.choices[0]?.message?.content || '',
+            tool_calls: secondToolCalls
+          };
+          setMessages(prev => [...prev, secondAssistantMessage]);
+          
+          // Process second set of tool calls
+          const secondToolResults: Message[] = [];
+          for (const toolCall of secondToolCalls) {
+            const result = await handleToolCall(toolCall);
+            secondToolResults.push({
+              type: 'tool',
+              content: result,
+              tool_call_id: toolCall.id
+            });
+          }
+          
+          // Add second tool result messages
+          setMessages(prev => [...prev, ...secondToolResults]);
+          
+          // Make third API call with second tool results
+          const finalMessages = [
+            ...updatedMessages,
+            { 
+              role: 'assistant' as const, 
+              content: secondResponse.choices[0]?.message?.content || '',
+              tool_calls: secondToolCalls.map(tc => ({
+                id: tc.id,
+                type: tc.type,
+                function: {
+                  name: tc.function.name,
+                  arguments: tc.function.arguments,
+                },
+              }))
+            },
+            ...secondToolResults.map(tr => ({
+              role: 'tool' as const,
+              content: tr.content,
+              tool_call_id: tr.tool_call_id!
+            }))
+          ];
+          
+          const thirdResponse = await client.chat.completions.create({
+            model: config.model,
+            messages: finalMessages,
+            tools: availableTools.filter(t => t.enabled).map(tool => ({
+              type: 'function' as const,
+              function: {
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.parameters,
+              },
+            })),
+          });
+          
+          const finalMessage: Message = {
+            type: 'assistant',
+            content: thirdResponse.choices[0]?.message?.content || '',
+          };
+          setMessages(prev => [...prev, finalMessage]);
+          
+        } else {
+          // No more tool calls, add the final message
+          const finalMessage: Message = {
+            type: 'assistant',
+            content: secondResponse.choices[0]?.message?.content || '',
+          };
+          setMessages(prev => [...prev, finalMessage]);
+        }
+        
+      } else {
+        // No tool calls, just add the assistant message
+        const assistantMessage: Message = {
+          type: 'assistant',
+          content: response.choices[0]?.message?.content || '',
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      }
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
+  const handleToolCall = async (toolCall: any): Promise<string> => {
+    try {
+      const args = JSON.parse(toolCall.function.arguments);
+      
+      switch (toolCall.function.name) {
+        case 'ping':
+          return 'pong';
+        
+        case 'echo':
+          return args.message || 'No message provided';
+        
+        default:
+          return `Unknown tool: ${toolCall.function.name}`;
+      }
+    } catch (error) {
+      return `Error executing tool ${toolCall.function.name}: ${(error as Error).message}`;
+    }
+  };
+
   const handleSlashCommand = async (command: string) => {
-    const [cmd] = command.split(' ');
+    const [cmd, ...args] = command.split(' ');
     
     switch (cmd.toLowerCase()) {
       case 'login':
@@ -274,10 +521,105 @@ export const App = () => {
         setMessages(prev => [...prev, clearMessage]);
         break;
       }
+      case 'tools': {
+        if (args.length === 0) {
+          // List all tools
+          const enabledCount = availableTools.filter(t => t.enabled).length;
+          let content = `Available tools (${enabledCount} enabled):\n`;
+          
+          if (availableTools.length === 0) {
+            content += 'No tools available.';
+          } else {
+            availableTools.forEach(tool => {
+              const status = tool.enabled ? '✓' : '○';
+              content += `  ${status} ${tool.name} - ${tool.description}\n`;
+            });
+          }
+          
+          content += '\nUse "/tools:enable <name>" to enable a tool or "/tools:disable <name>" to disable it.';
+          
+          const toolsMessage: Message = {
+            type: 'system',
+            content
+          };
+          setMessages(prev => [...prev, toolsMessage]);
+        }
+        break;
+      }
+      case 'tools:enable': {
+        const toolName = args[0];
+        if (!toolName) {
+          const errorMessage: Message = {
+            type: 'system',
+            content: 'Please specify a tool name. Use "/tools" to see available tools.'
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          break;
+        }
+        
+        const toolIndex = availableTools.findIndex(t => t.name === toolName);
+        if (toolIndex === -1) {
+          const errorMessage: Message = {
+            type: 'system',
+            content: `Tool "${toolName}" not found. Use "/tools" to see available tools.`
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          break;
+        }
+        
+        const updatedTools = [...availableTools];
+        updatedTools[toolIndex].enabled = true;
+        setAvailableTools(updatedTools);
+        
+        // Save state to disk
+        await saveToolsState(updatedTools);
+        
+        const successMessage: Message = {
+          type: 'system',
+          content: `Tool "${toolName}" enabled.`
+        };
+        setMessages(prev => [...prev, successMessage]);
+        break;
+      }
+      case 'tools:disable': {
+        const toolName = args[0];
+        if (!toolName) {
+          const errorMessage: Message = {
+            type: 'system',
+            content: 'Please specify a tool name. Use "/tools" to see available tools.'
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          break;
+        }
+        
+        const toolIndex = availableTools.findIndex(t => t.name === toolName);
+        if (toolIndex === -1) {
+          const errorMessage: Message = {
+            type: 'system',
+            content: `Tool "${toolName}" not found. Use "/tools" to see available tools.`
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          break;
+        }
+        
+        const updatedTools = [...availableTools];
+        updatedTools[toolIndex].enabled = false;
+        setAvailableTools(updatedTools);
+        
+        // Save state to disk
+        await saveToolsState(updatedTools);
+        
+        const successMessage: Message = {
+          type: 'system',
+          content: `Tool "${toolName}" disabled.`
+        };
+        setMessages(prev => [...prev, successMessage]);
+        break;
+      }
       case 'help': {
         const helpMessage: Message = {
           type: 'system',
-          content: 'Available commands:\n/login - Authenticate with Shapes API\n/logout - Clear authentication token\n/images - List available image files\n/image [filename] - Upload an image (specify filename or auto-select first)\n/clear - Clear uploaded images\n/exit - Exit the application\n/help - Show this help message'
+          content: 'Available commands:\n/login - Authenticate with Shapes API\n/logout - Clear authentication token\n/images - List available image files\n/image [filename] - Upload an image (specify filename or auto-select first)\n/clear - Clear uploaded images\n/tools - List available tools\n/tools:enable <name> - Enable a tool\n/tools:disable <name> - Disable a tool\n/exit - Exit the application\n/help - Show this help message'
         };
         setMessages(prev => [...prev, helpMessage]);
         break;
@@ -413,6 +755,7 @@ export const App = () => {
         <ChatInput 
           onSend={handleSendMessage} 
           images={images}
+          enabledToolsCount={availableTools.filter(t => t.enabled).length}
           shapeName={shapeName}
           authStatus={authStatus}
           endpoint={endpoint}

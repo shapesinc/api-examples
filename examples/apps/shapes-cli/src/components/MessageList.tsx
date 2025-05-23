@@ -3,9 +3,11 @@ import { Box, Text } from 'ink';
 import { renderCodeBlock } from '../utils/rendering.js';
 
 interface Message {
-  type: 'user' | 'assistant' | 'system';
+  type: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   images?: string[];
+  tool_calls?: any[];
+  tool_call_id?: string;
 }
 
 interface MessageListProps {
@@ -30,12 +32,21 @@ export const MessageList = ({ messages, shapeName }: MessageListProps) => {
 
     return (
       <Box key={`message-${index}`} flexDirection="column" marginBottom={1}>
-        <Text color={message.type === 'user' ? 'green' : message.type === 'system' ? 'magenta' : 'cyan'}>
-          {message.type === 'user' ? 'You:' : message.type === 'system' ? 'System:' : getAssistantLabel()}
+        <Text color={message.type === 'user' ? 'green' : message.type === 'system' ? 'magenta' : message.type === 'tool' ? 'yellow' : 'cyan'}>
+          {message.type === 'user' ? 'You:' : message.type === 'system' ? 'System:' : message.type === 'tool' ? 'Tool:' : getAssistantLabel()}
         </Text>
         <Box marginLeft={2}>
           <Text>{formattedContent}</Text>
         </Box>
+        {message.tool_calls && message.tool_calls.length > 0 && (
+          <Box marginLeft={2} marginTop={1}>
+            {message.tool_calls.map((toolCall, tcIndex) => (
+              <Box key={tcIndex} flexDirection="column" marginBottom={1}>
+                <Text color="yellow">🔧 {toolCall.function.name}({toolCall.function.arguments})</Text>
+              </Box>
+            ))}
+          </Box>
+        )}
         {message.images && message.images.length > 0 && (
           <Box marginLeft={2} marginTop={1}>
             <Text color="gray">Images: {message.images.length}</Text>
