@@ -80,17 +80,12 @@ var client = new ChatClient(
 
 var chatMessages = new List<ChatMessage>();
 
-chatMessages.Add(new UserChatMessage.ChatMessageContentPart.CreateTextPart("Hello!"));
-// or:
 chatMessages.Add(new UserChatMessage.ChatMessageContentPart
 	.CreateTextPart("""{"role": "user", "content": "Hello!"}"""));
 
 var completion = await client.CompleteChatAsync(chatMessages);
 
-Console.WriteLine(completion.Value.Content[0].Text)
-// or:
-foreach (var content in completion.Value.Content)
-	Console.WriteLine(content.Text)
+Console.WriteLine(completion.Value.Content[0].Text);
 ```
 
 ### 🔄 CURL
