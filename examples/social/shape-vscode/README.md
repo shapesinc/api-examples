@@ -54,7 +54,7 @@ shape-vscode/
    npm install
    ```
 
-   ###IMPORTANT
+   ### IMPORTANT   
    When developing a VS Code extension, you must open the folder containing the package.json directly as the workspace root in VS Code.
    Hence make sure that the folder shape-vscode is opened as the workspace root in VS Code
 
