@@ -215,7 +215,7 @@ export const App = () => {
       const request = {
         model: config.model,
         messages: [
-          ...messages.map(msg => {
+          ...messages.filter(msg => msg.type !== 'system' && msg.type !== 'tool').map(msg => {
             if (msg.type === 'user' && msg.images && msg.images.length > 0) {
               return {
                 role: 'user' as const,
@@ -276,7 +276,7 @@ export const App = () => {
         
         // Make second API call with tool results
         const updatedMessages = [
-          ...messages.map(msg => {
+          ...messages.filter(msg => msg.type !== 'system' && msg.type !== 'tool').map(msg => {
             if (msg.type === 'user' && msg.images && msg.images.length > 0) {
               return {
                 role: 'user' as const,
