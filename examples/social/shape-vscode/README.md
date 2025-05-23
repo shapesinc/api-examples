@@ -33,11 +33,11 @@ Before you begin, make sure you have:
 
 ---
 
-## 🗂 Directory Structure
-shape-vscode/      
-├── extension.js 
-├── package.json 
-├── .env 
+## 🗂 Directory Structure       
+shape-vscode/          
+├── extension.js     
+├── package.json      
+├── .env      
 ├── .gitignore  
 ├── .vscodeignore  
 └── README.md  
